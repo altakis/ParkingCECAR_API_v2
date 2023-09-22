@@ -1,10 +1,10 @@
+import uuid
+
+from detector_utils import detector_interface
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import uuid
-
-from detector_utils import detector_interface
 
 from .models import Detection
 from .serializers import DetectionSerializer
