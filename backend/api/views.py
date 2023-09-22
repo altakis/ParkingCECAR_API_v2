@@ -8,11 +8,13 @@ from rest_framework.response import Response
 
 from .models import Detection
 from .serializers import DetectionSerializer
+from .tasks import mytask
 
 
 @api_view(http_method_names=["GET", "POST"])
 def detection_endpoints(request, format=None):
     if request.method == "GET":
+        mytask.delay()
         return detection_list(request, format)
 
     if request.method == "POST":

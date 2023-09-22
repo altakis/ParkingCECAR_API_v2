@@ -15,6 +15,7 @@ python-dotenv = "*"
 matplotlib = "*"
 redis = "*"
 celery = "*"
+gevent = "*"
 
 [dev-packages]
 
