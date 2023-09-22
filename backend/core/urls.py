@@ -19,7 +19,7 @@ from django.urls import path
 from rest_framework import routers
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from core import views as core_views
+from api import views as api_views
 
 router = routers.DefaultRouter()
 
@@ -27,7 +27,7 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path("admin/", admin.site.urls),
-    path("detections/", core_views.detection_endpoints),
-    path("detections/<uuid:id>", core_views.detection_detail),
-    path("detections/?file_name=<str:file_name>", core_views.detection_detail_name),
+    path("detections/", api_views.detection_endpoints),
+    path("detections/<uuid:id>", api_views.detection_detail),
+    path("detections/?file_name=<str:file_name>", api_views.detection_detail_name),
 ]
