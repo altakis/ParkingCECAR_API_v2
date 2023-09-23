@@ -6,14 +6,6 @@ from detector_utils import detector_interface
 
 from .serializers import DetectionSerializer
 
-
-@shared_task
-def mytask():
-    sleep(5)
-    print(f"{datetime.now()}")
-    print("----------")
-
-
 @shared_task
 def background_detection(detector_function, id_field, data):
     detector_function(id_field, data)

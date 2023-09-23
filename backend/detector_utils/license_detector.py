@@ -10,10 +10,11 @@ import torch
 import validators
 from numpy import asarray
 from PIL import Image
-from transformers import (AutoFeatureExtractor, DetrForObjectDetection,
-                          YolosForObjectDetection)
-
-from . import FileManagerUtil
+from transformers import (
+    AutoFeatureExtractor,
+    DetrForObjectDetection,
+    YolosForObjectDetection,
+)
 
 # colors for visualization
 COLORS = [
@@ -113,9 +114,9 @@ class license_detector:
                     thickness=10,
                 )
                 cv2.putText(
-                    img = img_array,
-                    text = f"{label}: {score:0.2f}",
-                    org = (int(xmin), int(ymin)),
+                    img=img_array,
+                    text=f"{label}: {score:0.2f}",
+                    org=(int(xmin), int(ymin)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=1,
                     color=(0, 255, 255),

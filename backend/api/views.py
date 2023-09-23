@@ -65,7 +65,7 @@ def detector_funtion(id_field, data):
 @api_view(http_method_names=["GET", "PUT", "DELETE"])
 def detection_detail(request, id, format=None):
     try:
-        detection = Detection.objects.get(pk=id)
+        detection = Detection.objects.get(id=id)
     except Detection.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -86,7 +86,7 @@ def detection_detail(request, id, format=None):
 @api_view(http_method_names=["GET", "PUT", "DELETE"])
 def detection_detail_name(request, file_name, format=None):
     try:
-        detection = Detection.objects.filter(file_name_containts=file_name)
+        detection = Detection.objects.filter(file_name__contains=file_name)
     except Detection.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
