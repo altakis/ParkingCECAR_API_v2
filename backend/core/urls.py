@@ -28,7 +28,7 @@ urlpatterns = router.urls
 urlpatterns += [
     path("admin/", admin.site.urls),
     path("detections/", api_views.detection_endpoints),
-    path("detections/<uuid:id>", api_views.detection_detail),
+    path("detections/id/<str:id>", api_views.detection_detail),
     path("detections/name/<str:file_name>", api_views.detection_detail_name),
     path("detections/ref/<str:id_ref>", api_views.detection_detail_id_ref),
 ]
