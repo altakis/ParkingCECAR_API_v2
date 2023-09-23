@@ -138,6 +138,6 @@ GitHub.sublime-settings
 
 #Project specific
 #img folders
-.backend/detection_imgs/*
+backend/detection_imgs/*
 #redis temp database
 *.rdb
