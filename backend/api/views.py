@@ -1,14 +1,16 @@
+import logging
+import traceback
 import uuid
 
+from core.celery_app import app as celery_worker
+from detector_utils import detector_interface
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from detector_utils import detector_interface
-
 from .models import Detection
 from .serializers import DetectionSerializer
-from .tasks import background_detection, get_worker_status
+from .tasks import background_detection
 
 
 @api_view(http_method_names=["GET", "POST"])
@@ -30,10 +32,20 @@ def detection_detect(request, format=None):
     data = request.data
 
     id_field = uuid.uuid4()
-    print(f"Testing worker status: {get_worker_status()}")
-    if get_worker_status():
-        background_detection.delay(detector_funtion, id_field, data)
+
+    worker_status = get_worker_status()
+    # print(f"Testing worker status: {worker_status}")
+    worker_availability = worker_status.get("availability")
+    # print(f"Testing worker availability: {worker_availability}")
+    worker_up_flag = False
+    if worker_availability is not None:
+        if len(worker_availability) > 0:
+            background_detection.delay(id_field, data)
+            worker_up_flag = True
     else:
+        logging.warning("Celery worker down")
+
+    if not worker_up_flag:
         detector_funtion(id_field, data)
 
     payload = {}
@@ -44,13 +56,14 @@ def detection_detect(request, format=None):
 
     return Response(payload, status=status.HTTP_201_CREATED)
 
+
 def detector_funtion(id_field, data):
     detector_ins = detector_interface.Detector()
     payload = detector_ins.detect_license_from_fs_location(
         fs_location=data["data"]["src_file"]
     )
     payload["detection"]["id_ref"] = id_field
-    #print(f"payload: {payload}")
+    # print(f"payload: {payload}")
     serializer = DetectionSerializer(data=payload.get("detection"))
     """ print("1. validity--------------------------------")
     print(f"serializer: valid? {serializer.is_valid()}")
@@ -61,6 +74,7 @@ def detector_funtion(id_field, data):
     print("-------------------------------------------") """
     if serializer.is_valid():
         serializer.save()
+
 
 @api_view(http_method_names=["GET", "PUT", "DELETE"])
 def detection_detail(request, id, format=None):
@@ -127,3 +141,29 @@ def detection_detail_id_ref(request, id_ref, format=None):
     if request.method == "DELETE":
         print(detection.delete())
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def get_worker_status():
+    from celery import current_app
+
+    i = current_app.control.inspect()
+    result = {
+        "availability": None,
+    }
+    try:
+        availability = i.ping()
+        stats = i.stats()
+        registered_tasks = i.registered()
+        active_tasks = i.active()
+        scheduled_tasks = i.scheduled()
+        result = {
+            "availability": availability,
+            "stats": stats,
+            "registered_tasks": registered_tasks,
+            "active_tasks": active_tasks,
+            "scheduled_tasks": scheduled_tasks,
+        }
+    except Exception as e:
+        logging.error(traceback.format_exc())
+
+    return result
