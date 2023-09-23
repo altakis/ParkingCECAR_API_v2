@@ -4,14 +4,16 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from detector_utils import detector_interface
+
 from .models import Detection
 from .serializers import DetectionSerializer
-from .tasks import background_detection
+from .tasks import background_detection, get_worker_status
 
 
 @api_view(http_method_names=["GET", "POST"])
 def detection_endpoints(request, format=None):
-    if request.method == "GET":        
+    if request.method == "GET":
         return detection_list(request, format)
 
     if request.method == "POST":
@@ -28,14 +30,37 @@ def detection_detect(request, format=None):
     data = request.data
 
     id_field = uuid.uuid4()
-    #print(id_field)
-    background_detection.delay(id_field, data)
+    print(f"Testing worker status: {get_worker_status()}")
+    if get_worker_status():
+        background_detection.delay(detector_funtion, id_field, data)
+    else:
+        detector_funtion(id_field, data)
+
     payload = {}
     payload["id_ref"] = id_field
-    payload["msg"] = "Check back with that uuid in 30 secs at the endpoint /detections/ref/<uuid:id_ref>"
+    payload[
+        "msg"
+    ] = "Check back with that uuid in 30 secs at the endpoint /detections/ref/<uuid:id_ref>"
 
     return Response(payload, status=status.HTTP_201_CREATED)
 
+def detector_funtion(id_field, data):
+    detector_ins = detector_interface.Detector()
+    payload = detector_ins.detect_license_from_fs_location(
+        fs_location=data["data"]["src_file"]
+    )
+    payload["detection"]["id_ref"] = id_field
+    #print(f"payload: {payload}")
+    serializer = DetectionSerializer(data=payload.get("detection"))
+    """ print("1. validity--------------------------------")
+    print(f"serializer: valid? {serializer.is_valid()}")
+    print("2. errors  --------------------------------")
+    print(serializer.errors)
+    print("3. data    --------------------------------")
+    print(serializer.validated_data)
+    print("-------------------------------------------") """
+    if serializer.is_valid():
+        serializer.save()
 
 @api_view(http_method_names=["GET", "PUT", "DELETE"])
 def detection_detail(request, id, format=None):
@@ -79,6 +104,7 @@ def detection_detail_name(request, file_name, format=None):
     if request.method == "DELETE":
         print(detection.delete())
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @api_view(http_method_names=["GET", "PUT", "DELETE"])
 def detection_detail_id_ref(request, id_ref, format=None):

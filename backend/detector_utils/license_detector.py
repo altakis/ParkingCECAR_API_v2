@@ -4,7 +4,6 @@ import time
 
 import cv2
 import easyocr
-import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import torch
