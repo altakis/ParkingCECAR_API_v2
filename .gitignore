@@ -137,4 +137,7 @@ GitHub.sublime-settings
 .history
 
 #Project specific
+#img folders
 .backend/detection_imgs/*
+#redis temp database
+*.rdb
