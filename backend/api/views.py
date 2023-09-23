@@ -2,7 +2,7 @@ import logging
 import traceback
 import uuid
 
-from core.celery_app import app as celery_worker
+from core import celery_utils
 from detector_utils import detector_interface
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -33,17 +33,17 @@ def detection_detect(request, format=None):
 
     id_field = uuid.uuid4()
 
-    worker_status = get_worker_status()
-    # print(f"Testing worker status: {worker_status}")
+    worker_status = celery_utils.get_worker_status()
+    #print(f"Testing worker status: {worker_status}")
     worker_availability = worker_status.get("availability")
-    # print(f"Testing worker availability: {worker_availability}")
+    #print(f"Testing worker availability: {worker_availability}")
     worker_up_flag = False
     if worker_availability is not None:
         if len(worker_availability) > 0:
             background_detection.delay(id_field, data)
             worker_up_flag = True
     else:
-        logging.warning("Celery worker down")
+        logging.warning("Celery-redis worker down")
 
     if not worker_up_flag:
         detector_funtion(id_field, data)
@@ -141,29 +141,3 @@ def detection_detail_id_ref(request, id_ref, format=None):
     if request.method == "DELETE":
         print(detection.delete())
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-def get_worker_status():
-    from celery import current_app
-
-    i = current_app.control.inspect()
-    result = {
-        "availability": None,
-    }
-    try:
-        availability = i.ping()
-        stats = i.stats()
-        registered_tasks = i.registered()
-        active_tasks = i.active()
-        scheduled_tasks = i.scheduled()
-        result = {
-            "availability": availability,
-            "stats": stats,
-            "registered_tasks": registered_tasks,
-            "active_tasks": active_tasks,
-            "scheduled_tasks": scheduled_tasks,
-        }
-    except Exception as e:
-        logging.error(traceback.format_exc())
-
-    return result
