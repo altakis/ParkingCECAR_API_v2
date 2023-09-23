@@ -5,16 +5,14 @@ import time
 import cv2
 import easyocr
 import matplotlib.pyplot as plt
+import numpy as np
 import requests
 import torch
 import validators
 from numpy import asarray
 from PIL import Image
-from transformers import (
-    AutoFeatureExtractor,
-    DetrForObjectDetection,
-    YolosForObjectDetection,
-)
+from transformers import (AutoFeatureExtractor, DetrForObjectDetection,
+                          YolosForObjectDetection)
 
 from . import FileManagerUtil
 
@@ -105,34 +103,27 @@ class license_detector:
         if id2label is not None:
             labels = [id2label[x] for x in labels]
 
-        plt.figure(figsize=(50, 50))
-        plt.imshow(img)
-        ax = plt.gca()
-        colors = COLORS * 100
-        for score, (xmin, ymin, xmax, ymax), label, color in zip(
-            scores, boxes, labels, colors
-        ):
+        img_array = np.array(img)
+        for score, (xmin, ymin, xmax, ymax), label in zip(scores, boxes, labels):
             if label == "license-plates":
-                ax.add_patch(
-                    plt.Rectangle(
-                        (xmin, ymin),
-                        xmax - xmin,
-                        ymax - ymin,
-                        fill=False,
-                        color=color,
-                        linewidth=10,
-                    )
+                cv2.rectangle(
+                    img_array,
+                    (int(xmin), int(ymin)),
+                    (int(xmax), int(ymax)),
+                    (0, 255, 0),
+                    thickness=10,
                 )
-                ax.text(
-                    xmin,
-                    ymin,
-                    f"{label}: {score:0.2f}",
-                    fontsize=60,
-                    bbox=dict(facecolor="yellow", alpha=0.8),
+                cv2.putText(
+                    img = img_array,
+                    text = f"{label}: {score:0.2f}",
+                    org = (int(xmin), int(ymin)),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=1,
+                    color=(0, 255, 255),
+                    thickness=1,
                 )
-        plt.axis("off")
 
-        license_located_img = self.fig2img(plt.gcf())
+        license_located_img = Image.fromarray(img_array)
         if crop_error > 0:
             return license_located_img, license_located_img, crop_error
         return license_located_img, crop_img, crop_error
@@ -146,7 +137,7 @@ class license_detector:
             license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV
         )
 
-        detections = self._reader.readtext(license_plate_crop_gray)
+        detections = self._reader.readtext(license_plate_crop_thresh)
 
         for detection in detections:
             bbox, text, score = detection

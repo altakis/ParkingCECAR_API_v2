@@ -8,6 +8,7 @@ class DetectionSerializer(serializers.ModelSerializer):
         model = Detection
         fields = [
             "id",
+            "id_ref",
             "record_name",
             "time_stamp",
             "file_name",

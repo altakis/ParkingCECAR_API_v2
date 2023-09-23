@@ -137,4 +137,4 @@ GitHub.sublime-settings
 .history
 
 #Project specific
-backend/detection_imgs/*
+.backend/detection_imgs/*

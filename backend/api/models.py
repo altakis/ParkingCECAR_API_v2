@@ -3,8 +3,9 @@ from django.db import models
 
 
 class Detection(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     # Reference value corresponding at the moment in which the system started the process
+    id_ref = models.UUIDField(default=uuid.uuid4)
     record_name = models.CharField(max_length=300)
     # Date in which this record in particular was created
     time_stamp = models.DateTimeField(null=True, blank=True)
