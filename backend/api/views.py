@@ -122,6 +122,10 @@ def detection_detail_name(request, file_name, format=None):
 
 @api_view(http_method_names=["GET", "PUT", "DELETE"])
 def detection_detail_id_ref(request, id_ref, format=None):
+    #TODO: completed process
+    # capture url_query params if any    
+    options = get_base64_query_params(request.data.get("options")) 
+
     try:
         detection = Detection.objects.get(id_ref=id_ref)
     except Detection.DoesNotExist:
@@ -129,7 +133,13 @@ def detection_detail_id_ref(request, id_ref, format=None):
 
     if request.method == "GET":
         serializer = DetectionSerializer(detection)
-        return Response(serializer.data)
+
+        if len(options) > 0:
+            payload = add_base64_objets_to_response(serializer.data, options)
+        else:
+            payload = serializer.data
+
+        return Response(payload)
     elif request.method == "PUT":
         serializer = DetectionSerializer(detection, data=request.data)
         if serializer.is_valid():
@@ -139,3 +149,26 @@ def detection_detail_id_ref(request, id_ref, format=None):
     if request.method == "DELETE":
         print(detection.delete())
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def add_base64_objets_to_response(detection, options):
+    return detector_interface.Detector.encode_base64_image_to_send_by_json(detection, options)
+
+def get_base64_query_params(query_params):
+    payload = {}
+
+    try:
+        pred_json_base64 = query_params.get("pred")
+        if pred_json_base64:
+            payload["pred_json_base64"] = pred_json_base64
+    except Exception:
+        pass
+
+    try:
+        crop_json_base64 = query_params.get("crop")
+        if crop_json_base64:
+            payload["crop_json_base64"] = crop_json_base64
+    except Exception:
+        pass
+
+    return payload

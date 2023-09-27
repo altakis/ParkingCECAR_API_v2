@@ -17,6 +17,7 @@ class Detector:
         siu = FileManagerUtil.FileManagerUtil()
         self.save_img_util = siu
 
+    @classmethod
     def detect_license_from_fs_location(self, fs_location, options=None):
         # load data
         model_name = ""
@@ -56,27 +57,40 @@ class Detector:
         detection["pred_loc"] = img_ori_loc
         detection["crop_loc"] = img_crop_loc
 
-        # Create base64 strings from detection
-        pred_json_base64 = None
-        crop_json_base64 = None
-        if options:
-            if options.get("pred_json_base64") == True:
-                pred_json_base64 = base64_utils.encode(payload.get("pred_loc"))
-            if options.get("crop_json_base64") == True:
-                crop_json_base64 = base64_utils.encode(payload.get("crop_loc"))
-
         payload = {
             "detection": detection,
-            "pred_json_base64": pred_json_base64,
-            "crop_json_base64": crop_json_base64,
         }
         return payload
 
+    @staticmethod
     def extract_file_name(image_path):
         # Normalize the path to use the appropriate path separator for the current OS
-        normalized_path = os.path.normpath(path_string)
+        normalized_path = os.path.normpath(image_path)
 
         # Split the path to get the filename
         filename = os.path.basename(normalized_path)
 
         return filename
+
+    @staticmethod
+    def encode_base64_image_to_send_by_json(detection, options):
+        payload = {}
+        payload["detection"] = detection
+
+        # Create base64 strings from detection
+        pred_json_base64 = None
+        crop_json_base64 = None
+        if options:
+            if options.get("pred_json_base64") == True:
+                pred_json_base64 = base64_utils.encode(
+                    detection.get("pred_loc")
+                )
+                payload["pred_json_base64"] = pred_json_base64
+
+            if options.get("crop_json_base64") == True:
+                crop_json_base64 = base64_utils.encode(
+                    detection.get("crop_loc")
+                )
+                payload["crop_json_base64"] = crop_json_base64
+
+        return payload
