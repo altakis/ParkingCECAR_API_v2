@@ -34,9 +34,9 @@ def detection_detect(request, format=None):
     id_field = uuid.uuid4()
 
     worker_status = celery_utils.get_worker_status()
-    #print(f"Testing worker status: {worker_status}")
+    # print(f"Testing worker status: {worker_status}")
     worker_availability = worker_status.get("availability")
-    #print(f"Testing worker availability: {worker_availability}")
+    # print(f"Testing worker availability: {worker_availability}")
     worker_up_flag = False
     if worker_availability is not None:
         if len(worker_availability) > 0:
@@ -100,15 +100,15 @@ def detection_detail(request, id, format=None):
 @api_view(http_method_names=["GET", "PUT", "DELETE"])
 def detection_detail_name(request, file_name, format=None):
     try:
-        detection = Detection.objects.filter(file_name__contains=file_name)
+        detection = Detection.objects.filter(file_name__icontains=file_name)
     except Detection.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == "GET":
-        serializer = DetectionSerializer(detection)
-        return Response(serializer.data)
-    ###
-    # TODO: check if needed or simply let this be a query method and let the other operations be performed by the id endpoint
+        serializer = DetectionSerializer(detection, many=True)
+        return Response(
+            {"num_coincidences": len(serializer.data), "data": serializer.data}
+        )
     elif request.method == "PUT":
         serializer = DetectionSerializer(detection, data=request.data)
         if serializer.is_valid():
@@ -130,8 +130,6 @@ def detection_detail_id_ref(request, id_ref, format=None):
     if request.method == "GET":
         serializer = DetectionSerializer(detection)
         return Response(serializer.data)
-    ###
-    # TODO: check if needed or simply let this be a query method and let the other operations be performed by the id endpoint
     elif request.method == "PUT":
         serializer = DetectionSerializer(detection, data=request.data)
         if serializer.is_valid():
