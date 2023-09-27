@@ -20,6 +20,8 @@ redis = "^5.0.0"
 celery = "^5.3.4"
 gevent = "^23.9.1"
 gunicorn = "^21.2.0"
+uvicorn = "^0.23.2"
+drf-spectacular = "^0.26.5"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.5.1"

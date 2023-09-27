@@ -82,15 +82,19 @@ class Detector:
         crop_json_base64 = None
         if options:
             if options.get("pred_json_base64") == True:
-                pred_json_base64 = base64_utils.encode(
-                    detection.get("pred_loc")
-                )
+                pred_loc = detection.get("pred_loc")
+                pred_json_base64 = base64_utils.encode(pred_loc)
                 payload["pred_json_base64"] = pred_json_base64
+                payload[
+                    "pred_json_base64_filename"
+                ] = Detector.extract_file_name(pred_loc)
 
             if options.get("crop_json_base64") == True:
-                crop_json_base64 = base64_utils.encode(
-                    detection.get("crop_loc")
-                )
+                crop_loc = detection.get("crop_loc")
+                crop_json_base64 = base64_utils.encode(crop_loc)
                 payload["crop_json_base64"] = crop_json_base64
+                payload[
+                    "crop_json_base64_filename"
+                ] = Detector.extract_file_name(crop_loc)
 
         return payload

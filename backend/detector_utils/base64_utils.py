@@ -30,14 +30,13 @@ def encode(source_image: Union[str, Image.Image]) -> str:
 
 def decode(source_image: str) -> Image.Image:
     # Decode the Base64 string to binary data
-    image_binary = base64.b64decode(image_base64.encode('utf-8'))
+    image_binary = base64.b64decode(source_image.encode('utf-8'))
 
     # Create a BytesIO stream from the binary data
     image_bytesio = BytesIO(image_binary)
 
     # Open the image using Pillow
     image = Image.open(image_bytesio)
-
 
     return image
 
