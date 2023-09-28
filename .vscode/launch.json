@@ -8,6 +8,8 @@
             "name": "Python: Django",
             "type": "python",
             "request": "launch",
+            "cwd": "${workspaceFolder}\\backend",
+            "purpose":["debug-in-terminal"],
             "program": "${workspaceFolder}\\backend\\manage.py",
             "args": [
                 "runserver"
