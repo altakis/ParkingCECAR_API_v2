@@ -17,7 +17,6 @@ class Detector:
         siu = FileManagerUtil.FileManagerUtil()
         self.save_img_util = siu
 
-    @classmethod
     def detect_license_from_fs_location(self, fs_location, options=None):
         # load data
         model_name = ""
