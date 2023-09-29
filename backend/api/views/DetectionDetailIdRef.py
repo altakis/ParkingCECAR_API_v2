@@ -21,8 +21,19 @@ class DetectionDetailIdRef(APIView):
             return Detection.objects.get(id_ref=id_ref)
         except Detection.DoesNotExist:
             raise Http404
-
+    
     def get(
+        self,
+        request: Optional[HttpRequest],
+        id_ref: Union[str, uuid.UUID],
+        format=None,
+    ):
+        detection = self.get_objects(id_ref)
+        serializer = DetectionSerializer(detection)
+
+        return Response(serializer.data)
+
+    def post(
         self,
         request: Optional[HttpRequest],
         id_ref: Union[str, uuid.UUID],

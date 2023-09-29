@@ -12,6 +12,12 @@ def task_rundev():
         'verbosity': 2,
     }
 
+def task_rundevpub():
+    return {
+        "actions": [CmdAction(f"{POETRY_ENV_RUN} {PYTHON_SCRIPT_CMD} manage runserver 0.0.0.0:8000")],
+        'verbosity': 2,
+    }
+
 def task_celery_run():
     return {
         "actions": [CmdAction(f"{POETRY_ENV_RUN} {PYTHON_SCRIPT_CMD} celery -A core worker -P gevent")],
