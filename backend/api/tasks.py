@@ -1,10 +1,8 @@
-from datetime import datetime
-from time import sleep
-
 from celery import shared_task
 from detector_utils import detector_interface
 
 from .serializers import DetectionSerializer
+
 
 @shared_task
 def background_detection(id_field, data):
@@ -14,7 +12,7 @@ def background_detection(id_field, data):
     )
     payload["detection"]["id_ref"] = id_field
 
-    #print(f"payload: {payload}")
+    # print(f"payload: {payload}")
     serializer = DetectionSerializer(data=payload.get("detection"))
     """ print("1. validity--------------------------------")
     print(f"serializer: valid? {serializer.is_valid()}")

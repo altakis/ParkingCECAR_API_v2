@@ -82,7 +82,9 @@ class license_detector:
         processed_outputs = feature_extractor.post_process(outputs, img_size)
         return processed_outputs[0]
 
-    def visualize_prediction(self, img, output_dict, threshold=0.5, id2label=None):
+    def visualize_prediction(
+        self, img, output_dict, threshold=0.5, id2label=None
+    ):
         keep = output_dict["scores"] > threshold
         boxes = output_dict["boxes"][keep].tolist()
         scores = output_dict["scores"][keep].tolist()
@@ -104,7 +106,9 @@ class license_detector:
             labels = [id2label[x] for x in labels]
 
         img_array = np.array(img)
-        for score, (xmin, ymin, xmax, ymax), label in zip(scores, boxes, labels):
+        for score, (xmin, ymin, xmax, ymax), label in zip(
+            scores, boxes, labels
+        ):
             if label == "license-plates":
                 cv2.rectangle(
                     img_array,
@@ -150,8 +154,8 @@ class license_detector:
 
     def get_ocr_output(self, crop_img: Image.Image, crop_error: int):
         start_time_ocr = time.perf_counter()
+
         # OCR license plate
-        # TODO: OCR is too slow and frankly useless as the camera quality simply doesn't allow a good enough capture
         license_text, license_text_score = "", ""
         if crop_error == 0:
             license_text, license_text_score = self.read_license_plate(crop_img)
@@ -194,7 +198,9 @@ class license_detector:
             # image = image.transpose(Image.FLIP_LEFT_RIGHT)
 
         # Make prediction
-        processed_outputs = self.make_prediction(image, feature_extractor, model)
+        processed_outputs = self.make_prediction(
+            image, feature_extractor, model
+        )
 
         # Visualize prediction
         viz_img, crop_img, crop_error = self.visualize_prediction(
@@ -202,9 +208,11 @@ class license_detector:
         )
         detection_process_time = time.perf_counter() - start_time_detection
 
-        license_text, license_text_score, ocr_process_time = self.get_ocr_output(
-            crop_img, crop_error
-        )
+        (
+            license_text,
+            license_text_score,
+            ocr_process_time,
+        ) = self.get_ocr_output(crop_img, crop_error)
 
         # package data and return
         time_stamp = datetime.datetime.now()
