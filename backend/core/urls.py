@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework import permissions, routers
 from rest_framework.schemas import get_schema_view
+from rest_framework.urlpatterns import format_suffix_patterns
 
 
 schema_view = get_schema_view(
@@ -31,10 +32,14 @@ schema_view = get_schema_view(
 
 router = routers.DefaultRouter()
 
-urlpatterns = router.urls
-
-urlpatterns += [
-    path("admin/", admin.site.urls),
-    path("api/v1/", include(api_urls)),
-    path("api/v1/schema/", schema_view),
+urlpatterns = [
+    path("api/v1/", include(router.urls)),
 ]
+
+urlpatterns += format_suffix_patterns(
+    [
+        path("admin/", admin.site.urls),
+        path("api/v1/", include(api_urls)),
+        path("api/v1/schema/", schema_view),
+    ]
+)

@@ -16,7 +16,7 @@ class DetectionDetailIdRef(APIView):
     Retrieve a detection instance given an specific id_ref.
     """
 
-    def get_objects(self, id_ref: Union[str, uuid.UUID]):
+    def get_object(self, id_ref: Union[str, uuid.UUID]):
         try:
             return Detection.objects.get(id_ref=id_ref)
         except Detection.DoesNotExist:
@@ -28,7 +28,17 @@ class DetectionDetailIdRef(APIView):
         id_ref: Union[str, uuid.UUID],
         format=None,
     ):
-        detection = self.get_objects(id_ref)
+        """Retrieves a single detection record that matches the id_ref given
+
+        Args:
+            request (Optional[HttpRequest]): _description_
+            id_ref (Union[str, uuid.UUID]): UUID asociate identifier for a detection record.
+            format (_type_, optional): System required config object that can help in specifying the format version .json|.html of the response. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        detection = self.get_object(id_ref)
         serializer = DetectionSerializer(detection)
 
         return Response(serializer.data)
@@ -39,7 +49,7 @@ class DetectionDetailIdRef(APIView):
         id_ref: Union[str, uuid.UUID],
         format=None,
     ):
-        detection = self.get_objects(id_ref)
+        detection = self.get_object(id_ref)
         serializer = DetectionSerializer(detection)
 
         options = utils.get_base64_query_params(request.data.get("options"))

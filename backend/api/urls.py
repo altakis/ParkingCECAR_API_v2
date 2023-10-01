@@ -5,7 +5,9 @@ from . import views as api_views
 
 urlpatterns = [
     path(
-        "detections/", api_views.DetectionList.as_view(), name="detections_list"
+        "detections/",
+        api_views.DetectionList.as_view(),
+        name="detections_list",
     ),
     path(
         "detections/id/<str:id>/",
@@ -18,6 +20,7 @@ urlpatterns = [
         name="detection_detal_by_file_name",
     ),
     path(
-        "detections/ref/<str:id_ref>/", api_views.DetectionDetailIdRef.as_view()
+        "detections/ref/<str:id_ref>/",
+        api_views.DetectionDetailIdRef.as_view(),
     ),
 ]
