@@ -165,13 +165,14 @@ class license_detector:
         # OCR license plate
         license_text_ocr_result = {}
         for index, img in enumerate(crop_img_list):
+            obj_index = f"obj_{index}"
             try:
-                license_text_ocr_result[
-                    f"detection_{index}"
-                ] = self.read_license_plate(img)
+                license_text_ocr_result[obj_index] = self.read_license_plate(
+                    img
+                )
             except Exception as e:
                 logging.error(e)
-                license_text_ocr_result[f"obj_{index}"] = f"Error: {e}"
+                license_text_ocr_result[obj_index] = f"Error: {e}"
 
         # Time out OCR
         ocr_process_time = time.perf_counter() - start_time_ocr
