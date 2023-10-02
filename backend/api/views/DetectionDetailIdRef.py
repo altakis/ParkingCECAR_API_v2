@@ -2,53 +2,45 @@ import uuid
 from typing import Optional, Union
 
 from api.models import Detection
-from api.serializers import DetectionSerializer
+from api.serializers import DetectionSerializer, IdRefOptionsSerializer
 from django.http import Http404, HttpRequest
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    extend_schema,
+)
 from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 
 from . import utils
 
 
-class DetectionDetailIdRef(generics.GenericAPIView):
+class DetectionDetailIdRef(mixins.RetrieveModelMixin, generics.GenericAPIView):
     """
     Retrieve a detection instance given an specific id_ref.
     """
 
     queryset = Detection.objects.all()
     serializer_class = DetectionSerializer
-
-    @extend_schema(exclude=True)
-    def get_object(self, id_ref: Union[str, uuid.UUID]):
-        try:
-            return Detection.objects.get(id_ref=id_ref)
-        except Detection.DoesNotExist:
-            raise Http404
+    lookup_field = "id_ref"
 
     @extend_schema(responses=DetectionSerializer)
-    def get(
-        self,
-        request: Optional[HttpRequest],
-        id_ref: Union[str, uuid.UUID],
-        format=None,
-    ):
+    def get(self, request, *args, **kwargs):
         """Retrieves a single detection record that matches the id_ref given
 
         Args:
-            request (Optional[HttpRequest]): Request info object carrying headers and request metadata.
-            id_ref (Union[str, uuid.UUID]): UUID asociate identifier for a detection record.
-            format (_type_, optional): System required config object that can help in specifying the format version .json|.html of the response. Defaults to None.
+            request (_type_): _description_
 
         Returns:
             _type_: _description_
         """
-        detection = self.get_object(id_ref)
-        serializer = DetectionSerializer(detection)
+        return self.retrieve(self, request, *args, **kwargs)
 
-        return Response(serializer.data)
-
-    @extend_schema(responses=DetectionSerializer)
+    @extend_schema(
+        responses=DetectionSerializer,
+        request=IdRefOptionsSerializer,
+    )
     def post(
         self,
         request: Optional[HttpRequest],
@@ -67,7 +59,7 @@ class DetectionDetailIdRef(generics.GenericAPIView):
         Returns:
             _type_: _description_
         """
-        detection = self.get_object(id_ref)
+        detection = self.get_object()
         serializer = DetectionSerializer(detection)
 
         options = utils.get_base64_query_params(request.data.get("options"))
