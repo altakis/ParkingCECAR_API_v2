@@ -141,3 +141,5 @@ GitHub.sublime-settings
 backend/detection_imgs/*
 #redis temp database
 *.rdb
+#schema
+backend/schema.yml
