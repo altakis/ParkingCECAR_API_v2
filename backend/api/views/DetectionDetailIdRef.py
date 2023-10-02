@@ -5,17 +5,19 @@ from api.models import Detection
 from api.serializers import DetectionSerializer
 from django.http import Http404, HttpRequest
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from rest_framework import generics, mixins, status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from . import utils
 
 
-class DetectionDetailIdRef(APIView):
+class DetectionDetailIdRef(generics.GenericAPIView):
     """
     Retrieve a detection instance given an specific id_ref.
     """
+
+    queryset = Detection.objects.all()
+    serializer_class = DetectionSerializer
 
     @extend_schema(exclude=True)
     def get_object(self, id_ref: Union[str, uuid.UUID]):

@@ -6,7 +6,7 @@ info:
 paths:
   /api/v1/detections/:
     get:
-      operationId: api_v1_detections_retrieve
+      operationId: api_v1_detections_list
       description: List all detections, or create a new detection.
       tags:
       - api
@@ -19,13 +19,35 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Detection'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Detection'
           description: ''
     post:
       operationId: api_v1_detections_create
-      description: List all detections, or create a new detection.
+      description: |-
+        Creates a detection record
+
+        Args:
+            request (_type_): _description_
+            format (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Detection'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -39,7 +61,7 @@ paths:
           description: ''
   /api/v1/detections{format}:
     get:
-      operationId: api_v1_detections_formatted_retrieve
+      operationId: api_v1_detections_formatted_list
       description: List all detections, or create a new detection.
       parameters:
       - in: path
@@ -60,11 +82,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Detection'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Detection'
           description: ''
     post:
       operationId: api_v1_detections_formatted_create
-      description: List all detections, or create a new detection.
+      description: |-
+        Creates a detection record
+
+        Args:
+            request (_type_): _description_
+            format (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
       parameters:
       - in: path
         name: format
@@ -75,6 +107,18 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Detection'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -173,6 +217,18 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Detection'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -250,6 +306,18 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Detection'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -340,6 +408,18 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Detection'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -371,6 +451,18 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Detection'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -477,6 +569,18 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Detection'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -515,6 +619,18 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Detection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Detection'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []

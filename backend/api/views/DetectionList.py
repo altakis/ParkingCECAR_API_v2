@@ -7,27 +7,44 @@ from api.tasks import background_detection
 from core import celery_utils
 from detector_utils import detector_interface
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from rest_framework import generics, mixins, status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 
-class DetectionList(APIView):
+class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
     """
     List all detections, or create a new detection.
     """
 
+    queryset = Detection.objects.all()
+    serializer_class = DetectionSerializer
+
     @extend_schema(responses=DetectionSerializer)
-    def get(self, request, format=None):
-        detections = Detection.objects.all()
-        serializer = DetectionSerializer(detections, many=True)
-        return Response(
-            {"total": len(serializer.data), "data": serializer.data},
-            status=status.HTTP_200_OK,
-        )
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "num_detections" : len(serializer.data),
+            "data": serializer.data,
+        })
 
     @extend_schema(responses=DetectionSerializer)
     def post(self, request, format=None):
+        """Creates a detection record
+
+        Args:
+            request (_type_): _description_
+            format (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         data = request.data
 
         id_field = uuid.uuid4()
