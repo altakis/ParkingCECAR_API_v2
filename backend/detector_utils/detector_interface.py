@@ -38,8 +38,10 @@ class Detector:
 
         detection["file_name"] = filename
 
-        # save img results
+        # create img folders if they don't exist
         self.save_img_util.initialize_folders()
+
+        # save img results
         (
             img_ori_name,
             img_crop_name,
