@@ -19,16 +19,12 @@ from transformers import (
 )
 
 # colors for visualization
-from .colors import COLORS
+from .constants import COLORS, MODELS, DEFAULT_MODEL
 
 
 class license_detector:
-    _models = [
-        "nickmuchi/yolos-small-finetuned-license-plate-detection",
-        "nickmuchi/detr-resnet50-license-plate-detection",
-        "nickmuchi/yolos-small-rego-plates-detection",
-    ]
-    _default_model = "nickmuchi/yolos-small-finetuned-license-plate-detection"
+    _models = MODELS
+    _default_model = DEFAULT_MODEL
 
     def __init__(
         self, model="", gpu_available=False, ocr_verbose=False
