@@ -10,7 +10,7 @@ class Detection(models.Model):
     # Reference value corresponding at the moment in which
     # the system started the process
     id_ref = models.UUIDField(default=uuid.uuid4)
-    record_name = models.CharField(max_length=300)
+    record_name = models.CharField(max_length=300, null=True, blank=True)
     # Date in which this record in particular was created
     time_stamp = models.DateTimeField(null=True, blank=True)
     # Original file name
