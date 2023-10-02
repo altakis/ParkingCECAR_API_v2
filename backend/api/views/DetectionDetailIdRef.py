@@ -3,14 +3,9 @@ from typing import Optional, Union
 
 from api.models import Detection
 from api.serializers import DetectionSerializer, IdRefOptionsSerializer
-from django.http import Http404, HttpRequest
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import (
-    OpenApiExample,
-    OpenApiParameter,
-    extend_schema,
-)
-from rest_framework import generics, mixins, status
+from django.http import HttpRequest
+from drf_spectacular.utils import extend_schema
+from rest_framework import generics, mixins
 from rest_framework.response import Response
 
 from . import utils
