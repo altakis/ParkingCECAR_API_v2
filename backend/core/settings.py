@@ -45,10 +45,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # External Packages
     "rest_framework",
+    "corsheaders",
+    "drf_spectacular",
+    # Internal Apps
     "core",
     "api",
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -143,6 +146,19 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOWED_ORIGIN_REGEXES = [
     'http://localhost:8000',
 ]
+
+REST_FRAMEWORK = {
+    # YOUR SETTINGS
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'ParkingCECAR Detection API',
+    'DESCRIPTION': 'License plate detection API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
+}
 
 """ LOGGING = {
     "version": 1,

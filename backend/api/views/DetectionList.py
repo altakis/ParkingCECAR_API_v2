@@ -6,6 +6,7 @@ from api.serializers import DetectionSerializer
 from api.tasks import background_detection
 from core import celery_utils
 from detector_utils import detector_interface
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,6 +17,7 @@ class DetectionList(APIView):
     List all detections, or create a new detection.
     """
 
+    @extend_schema(responses=DetectionSerializer)
     def get(self, request, format=None):
         detections = Detection.objects.all()
         serializer = DetectionSerializer(detections, many=True)
@@ -24,6 +26,7 @@ class DetectionList(APIView):
             status=status.HTTP_200_OK,
         )
 
+    @extend_schema(responses=DetectionSerializer)
     def post(self, request, format=None):
         data = request.data
 

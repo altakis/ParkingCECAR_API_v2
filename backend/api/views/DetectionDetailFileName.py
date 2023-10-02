@@ -3,6 +3,7 @@ from typing import Optional
 from api.models import Detection
 from api.serializers import DetectionSerializer
 from django.http import Http404, HttpRequest
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,6 +20,7 @@ class DetectionDetailFileName(APIView):
         except Detection.DoesNotExist:
             raise Http404
 
+    @extend_schema(responses=DetectionSerializer)
     def get(
         self,
         request: Optional[HttpRequest],

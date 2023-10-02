@@ -4,6 +4,7 @@ from typing import Optional, Union
 from api.models import Detection
 from api.serializers import DetectionSerializer
 from django.http import Http404, HttpRequest
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,7 +22,8 @@ class DetectionDetailIdRef(APIView):
             return Detection.objects.get(id_ref=id_ref)
         except Detection.DoesNotExist:
             raise Http404
-    
+
+    @extend_schema(responses=DetectionSerializer)
     def get(
         self,
         request: Optional[HttpRequest],
@@ -43,13 +45,14 @@ class DetectionDetailIdRef(APIView):
 
         return Response(serializer.data)
 
+    @extend_schema(responses=DetectionSerializer)
     def post(
         self,
         request: Optional[HttpRequest],
         id_ref: Union[str, uuid.UUID],
         format=None,
     ):
-        """Retrieves an specific detection record given an id_ref. 
+        """Retrieves an specific detection record given an id_ref.
         Aditionally, this method also packages and sends a base64 string
         containing a image object across a REST response.
 
@@ -74,6 +77,7 @@ class DetectionDetailIdRef(APIView):
 
         return Response(payload)
 
+    @extend_schema(responses=DetectionSerializer)
     def put(
         self, request: HttpRequest, id_ref: Union[str, uuid.UUID], format=None
     ):
@@ -94,6 +98,7 @@ class DetectionDetailIdRef(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(responses=DetectionSerializer)
     def delete(
         self,
         request: Optional[HttpRequest],
