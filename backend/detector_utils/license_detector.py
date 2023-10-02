@@ -34,29 +34,30 @@ class license_detector:
         "nickmuchi/yolos-small-rego-plates-detection",
     ]
     _default_model = "nickmuchi/yolos-small-finetuned-license-plate-detection"
-    _reader = easyocr.Reader(["en"], gpu=False, verbose=False)
 
-    def __init__(self, model="") -> None:
+    def __init__(
+        self, model="", gpu_available=False, ocr_verbose=False
+    ) -> None:
         if len(model) == 0:
             self._model = license_detector._default_model
         else:
             self._model = model
+        self._reader = easyocr.Reader(
+            ["en"], gpu=gpu_available, verbose=ocr_verbose
+        )
 
-    def getCurrentModel(self) -> str:
+    @property
+    def model(self) -> str:
         return self._model
 
-    def setModelName(self, model) -> None:
-        if model in license_detector._models:
-            self._model = model
-        else:
-            self._model = license_detector._default_model
-
-    def verifyModel(self, model):
-        if len(model) == 0:
-            self._model = license_detector._default_model
-        else:
-            self.setModelName(model)
-        return self.getCurrentModel()
+    @model.setter
+    def model(self, model) -> None:
+        if len(model) > 0:
+            if model in license_detector._models:
+                self._model = model
+            else:
+                self._model = license_detector._default_model
+        return self.model
 
     def get_original_image(self, url_input):
         if validators.url(url_input):
@@ -173,15 +174,15 @@ class license_detector:
         # Time process
         start_time_detection = time.perf_counter()
 
-        model_name = self.verifyModel(model_name)
+        self.model = model_name
 
         # Extract model and feature extractor
-        feature_extractor = AutoFeatureExtractor.from_pretrained(model_name)
+        feature_extractor = AutoFeatureExtractor.from_pretrained(self.model)
 
-        if "yolos" in model_name:
-            model = YolosForObjectDetection.from_pretrained(model_name)
-        elif "detr" in model_name:
-            model = DetrForObjectDetection.from_pretrained(model_name)
+        if "yolos" in self.model:
+            model = YolosForObjectDetection.from_pretrained(self.model)
+        elif "detr" in self.model:
+            model = DetrForObjectDetection.from_pretrained(self.model)
 
         if validators.url(url_input):
             image = self.get_original_image(url_input)
