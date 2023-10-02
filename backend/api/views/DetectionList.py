@@ -21,6 +21,14 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
 
     @extend_schema(responses=DetectionSerializer)
     def get(self, request, *args, **kwargs):
+        """Retrieves a list of all the available detections.
+
+        Args:
+            request (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
