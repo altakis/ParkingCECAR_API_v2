@@ -1,10 +1,13 @@
 from detector_utils import detector_interface
 
 
-def add_base64_objets_to_response(detection, options):
-    return detector_interface.Detector.encode_base64_image_to_send_by_json(
-        detection, options
-    )
+def check_for_base64_objets_to_response(serializer_data, request_data):
+    if len(request_data) > 0:
+        return detector_interface.Detector.encode_base64_image_to_send_by_json(
+            serializer_data, get_base64_query_params(request_data)
+        )
+    else:
+        return serializer_data
 
 
 def get_base64_query_params(query_params):

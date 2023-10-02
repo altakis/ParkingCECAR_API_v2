@@ -57,12 +57,8 @@ class DetectionDetailIdRef(mixins.RetrieveModelMixin, generics.GenericAPIView):
         detection = self.get_object()
         serializer = DetectionSerializer(detection)
 
-        options = utils.get_base64_query_params(request.data.get("options"))
-        if len(options) > 0:
-            payload = utils.add_base64_objets_to_response(
-                serializer.data, options
-            )
-        else:
-            payload = serializer.data
+        payload = utils.check_for_base64_query_params(
+            serializer.data, request.data
+        )
 
         return Response(payload)
