@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import List
 
 from PIL import Image
 
@@ -44,17 +45,26 @@ class FileManagerUtil:
                 os.makedirs(path)
 
     def save_img_results(
-        self, img_visualization: Image.Image, img_crop: Image.Image
+        self, img_visualization: Image.Image, img_crop_list: List[Image.Image]
     ):
         now = datetime.now()
         dt_string = now.strftime("%Y_%m_%d__%H_%M_%S")
         img_ori_name = f"{dt_string}_ori.png"
-        img_crop_name = f"{dt_string}_crop.png"
-
         img_ori_loc = os.path.join(self._img_folder, img_ori_name)
-        img_crop_loc = os.path.join(self._crop_folder, img_crop_name)
-
         img_visualization.save(img_ori_loc, "png")
-        img_crop.save(img_crop_loc, "png")
 
-        return img_ori_name, img_crop_name, img_ori_loc, img_crop_loc
+        img_crop_name_list = []
+        img_crop_loc_list = []
+
+        # To prevent enumerate operation errors
+        if isinstance(img_crop_list, Image.Image):
+            img_crop_list = [img_crop_list]
+
+        for index, crop in enumerate(img_crop_list):
+            img_crop_name_list.append(f"{dt_string}_e{index}_crop.png")
+            img_crop_loc_list.append(
+                os.path.join(self._crop_folder, img_crop_name_list[index])
+            )
+            crop.save(img_crop_loc_list[index], "png")
+
+        return img_ori_name, img_crop_name_list, img_ori_loc, img_crop_loc_list

@@ -41,9 +41,9 @@ class Detector:
         # save img results
         (
             img_ori_name,
-            img_crop_name,
+            img_crop_name_list,
             img_ori_loc,
-            img_crop_loc,
+            img_crop_loc_list,
         ) = self.save_img_util.save_img_results(
             detection.get("viz_img"), detection.get("crop_img")
         )
@@ -53,7 +53,7 @@ class Detector:
         full_record_name = f"{current_record_name}{filename}"
         detection["record_name"] = full_record_name
         detection["pred_loc"] = img_ori_loc
-        detection["crop_loc"] = img_crop_loc
+        detection["crop_loc"] = ' '.join(img_crop_loc_list)
 
         payload = {
             "detection": detection,

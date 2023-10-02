@@ -1,6 +1,8 @@
 import datetime
 import io
+import logging
 import time
+from typing import List
 
 import cv2
 import easyocr
@@ -17,14 +19,7 @@ from transformers import (
 )
 
 # colors for visualization
-COLORS = [
-    [0.000, 0.447, 0.741],
-    [0.850, 0.325, 0.098],
-    [0.929, 0.694, 0.125],
-    [0.494, 0.184, 0.556],
-    [0.466, 0.674, 0.188],
-    [0.301, 0.745, 0.933],
-]
+from .colors import COLORS
 
 
 class license_detector:
@@ -93,15 +88,22 @@ class license_detector:
 
         # Crops located license img for later ocr processing
         # crop_error values: 0 = None, 1 = cropping error, 2 = not found license
-        crop_error = 0
+        crop_error = 0.0
         if len(boxes) > 0:
-            try:
-                crop_img = img.crop(*boxes)
-            except:
-                crop_error = 1
+            crop_img = []
+            for img_box in boxes:
+                try:
+                    crop_img.append(img.crop(img_box))
+                except Exception as e:
+                    logging.error(e)
+                    try:
+                        crop_img.append(img)
+                        crop_error += 0.1
+                    except:
+                        continue
         else:
             crop_error = 2
-            crop_img = img
+            crop_img = [img]
 
         if id2label is not None:
             labels = [id2label[x] for x in labels]
@@ -129,7 +131,7 @@ class license_detector:
                 )
 
         license_located_img = Image.fromarray(img_array)
-        if crop_error > 0:
+        if crop_error == 2:
             return license_located_img, license_located_img, crop_error
         return license_located_img, crop_img, crop_error
 
@@ -144,29 +146,37 @@ class license_detector:
 
         detections = self._reader.readtext(license_plate_crop_thresh)
 
-        for detection in detections:
+        result = {}
+        for index, detection in enumerate(detections):
             bbox, text, score = detection
 
             text = text.upper().strip()
 
-            return text, score
+            result[f"det_{index}"] = f"{text}_{score}"
 
-        return None, None
+        if len(result) > 0:
+            return result
 
-    def get_ocr_output(self, crop_img: Image.Image, crop_error: int):
+        return None
+
+    def get_ocr_output(self, crop_img_list: List[Image.Image], crop_error: int):
         start_time_ocr = time.perf_counter()
 
         # OCR license plate
-        license_text, license_text_score = "", ""
-        if crop_error == 0:
-            license_text, license_text_score = self.read_license_plate(crop_img)
-        else:
-            license_text, license_text_score = "ERROR", 0
+        license_text_ocr_result = {}
+        for index, img in enumerate(crop_img_list):
+            try:
+                license_text_ocr_result[
+                    f"detection_{index}"
+                ] = self.read_license_plate(img)
+            except Exception as e:
+                logging.error(e)
+                license_text_ocr_result[f"obj_{index}"] = f"Error: {e}"
 
         # Time out OCR
         ocr_process_time = time.perf_counter() - start_time_ocr
 
-        return license_text, license_text_score, ocr_process_time
+        return license_text_ocr_result, ocr_process_time
 
     def detect_objects(
         self, model_name, url_input, image_input, webcam_input, threshold
@@ -210,8 +220,7 @@ class license_detector:
         detection_process_time = time.perf_counter() - start_time_detection
 
         (
-            license_text,
-            license_text_score,
+            license_text_ocr_result,
             ocr_process_time,
         ) = self.get_ocr_output(crop_img, crop_error)
 
@@ -222,7 +231,7 @@ class license_detector:
             "time_stamp": time_stamp,
             "viz_img": viz_img,
             "crop_img": crop_img,
-            "ocr_text_result": f"[ {license_text} ] : [{license_text_score}]",
+            "ocr_text_result": str(license_text_ocr_result),
             "processing_time_pred": round(detection_process_time, 20),
             "processing_time_ocr": round(ocr_process_time, 20),
         }
