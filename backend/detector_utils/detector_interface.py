@@ -31,10 +31,7 @@ class Detector:
 
         # save original file name
         # Normalize the path to use the appropriate path separator for the current OS
-        normalized_path = os.path.normpath(fs_location)
-
-        # Split the path to get the filename
-        filename = os.path.basename(normalized_path)
+        filename = self.extract_file_name(fs_location)
 
         detection["file_name"] = filename
 
