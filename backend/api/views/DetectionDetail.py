@@ -15,6 +15,7 @@ class DetectionDetail(APIView):
     Retrieve, update or delete a detection instance.
     """
 
+    @extend_schema(exclude=True)
     def get_object(self, pk: Union[str, uuid.UUID]):
         try:
             return Detection.objects.get(id=pk)

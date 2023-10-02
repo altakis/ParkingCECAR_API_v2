@@ -17,6 +17,7 @@ class DetectionDetailIdRef(APIView):
     Retrieve a detection instance given an specific id_ref.
     """
 
+    @extend_schema(exclude=True)
     def get_object(self, id_ref: Union[str, uuid.UUID]):
         try:
             return Detection.objects.get(id_ref=id_ref)

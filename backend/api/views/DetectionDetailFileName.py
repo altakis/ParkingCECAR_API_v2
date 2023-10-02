@@ -14,6 +14,7 @@ class DetectionDetailFileName(APIView):
     Retrieve a list of detection instances matching a given file name.
     """
 
+    @extend_schema(exclude=True)
     def get_objects(self, file_name: str):
         try:
             return Detection.objects.filter(file_name__icontains=file_name)

@@ -55,6 +55,7 @@ class DetectionList(APIView):
 
         return Response(payload, status=status.HTTP_201_CREATED)
 
+    @extend_schema(exclude=True)
     def detector_funtion(self, id_field, data):
         detector_ins = detector_interface.Detector()
         payload = detector_ins.detect_license_from_fs_location(
