@@ -31,7 +31,7 @@ class DetectionDetailIdRef(APIView):
         """Retrieves a single detection record that matches the id_ref given
 
         Args:
-            request (Optional[HttpRequest]): _description_
+            request (Optional[HttpRequest]): Request info object carrying headers and request metadata.
             id_ref (Union[str, uuid.UUID]): UUID asociate identifier for a detection record.
             format (_type_, optional): System required config object that can help in specifying the format version .json|.html of the response. Defaults to None.
 
@@ -49,6 +49,18 @@ class DetectionDetailIdRef(APIView):
         id_ref: Union[str, uuid.UUID],
         format=None,
     ):
+        """Retrieves an specific detection record given an id_ref. 
+        Aditionally, this method also packages and sends a base64 string
+        containing a image object across a REST response.
+
+        Args:
+            request (Optional[HttpRequest]): _description_
+            id_ref (Union[str, uuid.UUID]): _description_
+            format (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         detection = self.get_object(id_ref)
         serializer = DetectionSerializer(detection)
 
@@ -65,6 +77,16 @@ class DetectionDetailIdRef(APIView):
     def put(
         self, request: HttpRequest, id_ref: Union[str, uuid.UUID], format=None
     ):
+        """Updates a specific detection record given an id_ref
+
+        Args:
+            request (HttpRequest): _description_
+            id_ref (Union[str, uuid.UUID]): _description_
+            format (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         detection = self.get_object(id_ref)
         serializer = DetectionSerializer(detection, data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -78,6 +100,16 @@ class DetectionDetailIdRef(APIView):
         id_ref: Union[str, uuid.UUID],
         format=None,
     ):
+        """Deletes a specific detection record given an id_ref
+
+        Args:
+            request (Optional[HttpRequest]): _description_
+            id_ref (Union[str, uuid.UUID]): _description_
+            format (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         detection = self.get_object(id_ref)
         detection.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
