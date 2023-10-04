@@ -160,21 +160,59 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-""" LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "file": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": "info.log",
+LOGGING_DIR = os.path.join(BASE_DIR, 'logs')  # Define the directory where log files will be stored
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'extremely_verbose':{
+            'format': {'{name} {levelname} {asctime} {module} {process:d} {thread:d} {message}'},
+            'style': '{',
+        },
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
         },
     },
-    "loggers": {
-        "django": {
-            "handlers": ["file"],
-            "level": "DEBUG",
-            "propagate": True,
+    'handlers': {
+        'info_file_handler': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGGING_DIR, 'info.log'),  # Log info level messages to this file
+            'formatter': 'verbose',
+        },
+        'error_file_handler': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGGING_DIR, 'error.log'),  # Log error level messages to this file
+            'formatter': 'extremely_verbose',
+        },
+        'critical_file_handler': {
+            'level': 'CRITICAL',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGGING_DIR, 'critical.log'),  # Log critical level messages to this file
+            'formatter': 'extremely_verbose',
+        },
+        'console_debug_handler': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',  # Log debug messages to the console
+            'formatter': 'extremely_verbose',
         },
     },
-} """
+    'loggers': {
+        'django': {
+            'handlers': ['info_file_handler', 'error_file_handler', 'critical_file_handler'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# Conditional activation of the console handler based on Django's debug mode
+if DEBUG:
+    LOGGING['loggers']['django']['handlers'].append('console_debug_handler')
