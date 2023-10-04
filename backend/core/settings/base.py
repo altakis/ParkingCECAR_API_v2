@@ -23,10 +23,13 @@ CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
 CELERY_TASK_SOFT_TIME_LIMIT = int(os.environ.get("CELERY_TASK_SOFT_TIME_LIMIT"))
 CELERY_TASK_TIME_LIMIT = int(os.environ.get("CELERY_TASK_TIME_LIMIT"))
 
+# Internal Apps and Middleware config
 from .app_def import *
+# Database connection config
 from .db_def import *
+# Authorization, Internationalization and Static folders
 from .auth_int_static_def import *
-from .cors_def import *
+# Primarily external Apps configuration
 from .misc_def import *
 
 from .logging import *
