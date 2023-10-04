@@ -161,6 +161,9 @@ SPECTACULAR_SETTINGS = {
 }
 
 LOGGING_DIR = os.path.join(BASE_DIR, 'logs')  # Define the directory where log files will be stored
+isExist = os.path.exists(LOGGING_DIR)
+if not isExist:
+    os.makedirs(LOGGING_DIR)
 
 LOGGING = {
     'version': 1,
@@ -177,6 +180,14 @@ LOGGING = {
         'simple': {
             'format': '{levelname} {message}',
             'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
         },
     },
     'handlers': {
@@ -200,19 +211,21 @@ LOGGING = {
         },
         'console_debug_handler': {
             'level': 'DEBUG',
+            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',  # Log debug messages to the console
             'formatter': 'extremely_verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['info_file_handler', 'error_file_handler', 'critical_file_handler'],
+            'handlers': [
+                'info_file_handler', 
+                'error_file_handler', 
+                'critical_file_handler',
+                'console_debug_handler',
+                ],
             'level': 'INFO',
             'propagate': True,
         },
     },
 }
-
-# Conditional activation of the console handler based on Django's debug mode
-if DEBUG:
-    LOGGING['loggers']['django']['handlers'].append('console_debug_handler')
