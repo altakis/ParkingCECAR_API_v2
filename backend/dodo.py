@@ -29,3 +29,9 @@ def task_celery_info():
         "actions": [CmdAction(f"{POETRY_ENV_RUN} {PYTHON_SCRIPT_CMD} celery -A core worker -l INFO -P gevent")],
         'verbosity': 2,
     }
+
+def task_celery_debug():
+    return {
+        "actions": [CmdAction(f"{POETRY_ENV_RUN} {PYTHON_SCRIPT_CMD} celery -A core worker -l DEBUG -P gevent")],
+        'verbosity': 2,
+    }
