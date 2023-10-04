@@ -1,10 +1,9 @@
+import logging
 import os
 
 from PIL import Image
 
-from . import base64_utils
-from . import FileManagerUtil
-from . import license_detector
+from . import FileManagerUtil, base64_utils, license_detector
 
 
 class Detector:
@@ -53,7 +52,7 @@ class Detector:
         full_record_name = f"{current_record_name}{filename}"
         detection["record_name"] = full_record_name
         detection["pred_loc"] = img_ori_loc
-        detection["crop_loc"] = ' '.join(img_crop_loc_list)
+        detection["crop_loc"] = " ".join(img_crop_loc_list)
 
         payload = {
             "detection": detection,
@@ -114,14 +113,16 @@ class Detector:
             pred_json_base64 = query_params.get("pred")
             if pred_json_base64:
                 payload["pred_json_base64"] = pred_json_base64
-        except Exception:
+        except Exception as e:
+            logging.info(e, exc_info=True)
             pass
 
         try:
             crop_json_base64 = query_params.get("crop")
             if crop_json_base64:
                 payload["crop_json_base64"] = crop_json_base64
-        except Exception:
+        except Exception as e:
+            logging.info(e, exc_info=True)
             pass
 
         return payload

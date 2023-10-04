@@ -91,11 +91,12 @@ class license_detector:
                 try:
                     crop_img.append(img.crop(img_box))
                 except Exception as e:
-                    logging.error(e)
+                    logging.error(e, exc_info=True)
                     try:
                         crop_img.append(img)
                         crop_error += 0.1
-                    except:
+                    except Exception as e:
+                        logging.error(e, exc_info=True)
                         continue
         else:
             crop_error = 2
@@ -167,7 +168,7 @@ class license_detector:
                     img
                 )
             except Exception as e:
-                logging.error(e)
+                logging.error(e, exc_info=True)
                 license_text_ocr_result[obj_index] = f"Error: {e}"
 
         # Time out OCR
