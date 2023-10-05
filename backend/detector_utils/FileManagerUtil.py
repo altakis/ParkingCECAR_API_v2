@@ -84,3 +84,5 @@ class FileManagerUtil:
 
         # If both conditions are met, it's a valid file path
         return True
+
+    #TODO: Create a method that takes a base64_src: str and saves said image to tmp_folder

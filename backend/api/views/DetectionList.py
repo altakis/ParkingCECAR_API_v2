@@ -37,36 +37,59 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
         la presencia de placas de licencia vehicular.
         """
         data = request.data
+        src_file_exist = "src_file" in data
+        src_base64_exist = "src_base64" in data
+        if src_file_exist or src_base64_exist:
+            # operation code: int default=2
+            # 0: use src_file
+            # 1: use base64_src
+            # 2: Both src parameter are malformed
+            operation_code = 2
+            if src_file_exist:
+                check_path_validity = (
+                    detector_interface.save_img_util.is_valid_file_path(
+                        data["src_file"]
+                    )
+                )
+                if check_path_validity:
+                    operation_code = 0
+                elif src_base64_exist and (not len(data["src_base64"]) == 0):
+                    operation_code = 1
 
-        id_field = uuid.uuid4()
+            if operation_code == 2:
+                return Response(
+                    {"error": "Malformed request", "data": data},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        worker_status = celery_utils.get_worker_status()
-        # print(f"Testing worker status: {worker_status}")
-        worker_availability = worker_status.get("availability")
-        # print(f"Testing worker availability: {worker_availability}")
-        worker_up_flag = False
-        if worker_availability is not None:
-            if len(worker_availability) > 0:
-                background_detection.delay(id_field, data)
-                worker_up_flag = True
-        else:
-            logging.warning("Celery-redis worker down")
+            id_field = uuid.uuid4()
 
-        if not worker_up_flag:
-            operation_code = self.detector_funtion(id_field, data)
-        if operation_code == 0:
-            return Response(
-                {"error": "Malformed request", "data": request.data},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            worker_status = celery_utils.get_worker_status()
+            # print(f"Testing worker status: {worker_status}")
+            worker_availability = worker_status.get("availability")
+            # print(f"Testing worker availability: {worker_availability}")
+            worker_up_flag = False
+            if worker_availability is not None:
+                if len(worker_availability) > 0:
+                    background_detection.delay(id_field, data)
+                    worker_up_flag = True
+            else:
+                logging.warning("Celery-redis worker down")
 
-        payload = {}
-        payload["id_ref"] = id_field
-        payload[
-            "msg"
-        ] = "Check back with that uuid in 30 secs at the endpoint /detections/ref/<uuid:id_ref>"
+            if not worker_up_flag:
+                operation_code = self.detector_funtion(id_field, data)
 
-        return Response(payload, status=status.HTTP_201_CREATED)
+            payload = {}
+            payload["id_ref"] = id_field
+            payload[
+                "msg"
+            ] = "Check back with that uuid in 30 secs at the endpoint /detections/ref/<uuid:id_ref>"
+
+            return Response(payload, status=status.HTTP_201_CREATED)
+        return Response(
+            {"error": "Missing any src file parameters.", "data": data},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @extend_schema(exclude=True)
     def detector_funtion(self, id_field, data):
