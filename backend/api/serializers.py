@@ -39,10 +39,10 @@ class IdRefOptionsSerializer(serializers.Serializer):
     pred = serializers.BooleanField()
     crop = serializers.BooleanField()
 
-class DetectionPOSToptions(serializers.Serializer):
+class DetectionPOSToptionsSerializer(serializers.Serializer):
     src_file = serializers.StringRelatedField()
-    base64_str = serializers.StringRelatedField()
-    base64_str_file_name = serializers.StringRelatedField()
+    src_base64 = serializers.StringRelatedField()
+    src_base64_file_name = serializers.StringRelatedField()
     #Return base64 strings of results
     pred = serializers.BooleanField()
     crop = serializers.BooleanField()

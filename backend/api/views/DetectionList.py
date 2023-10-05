@@ -2,7 +2,7 @@ import logging
 import uuid
 
 from api.models import Detection
-from api.serializers import DetectionSerializer
+from api.serializers import DetectionPOSToptionsSerializer, DetectionSerializer
 from api.tasks import background_detection
 from core import celery_utils
 from detector_utils import detector_interface
@@ -31,11 +31,15 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
         """
         return self.list(self, request, *args, **kwargs)
 
-    @extend_schema(responses=DetectionSerializer)
+    @extend_schema(
+        responses=DetectionSerializer,
+        request=DetectionPOSToptionsSerializer,
+    )
     def post(self, request, format=None):
         """Toma el origen en el sistema de archivos de una imagen y detecta
         la presencia de placas de licencia vehicular.
         """
+        logging.debug(request)
         data = request.data
         src_file_exist = "src_file" in data
         src_base64_exist = "src_base64" in data
@@ -54,9 +58,9 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
                 )
                 if check_path_validity:
                     operation_code = 0
-                elif src_base64_exist and (not len(data["src_base64"]) == 0):
-                    src_file = data["src_base64"]
-                    operation_code = 1
+            elif src_base64_exist and (not len(data["src_base64"]) == 0):
+                src_file = data["src_base64"]
+                operation_code = 1
 
             # Shortcircuit operation if operation_code is equal to 2.
             if operation_code == 2:
@@ -67,8 +71,8 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
             # Otherwise if operation_code is 1 then transform base64_string
             # to an image and save it to the tmp_folder
             if operation_code == 1:
-                if "base64_filename" in data:
-                    base64_filename = data["base64_str_file_name"]
+                if "src_base64_file_name" in data:
+                    base64_filename = data["src_base64_file_name"]
                 else:
                     base64_filename = None
                 data[
@@ -111,11 +115,11 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
     @extend_schema(exclude=True)
     def detector_funtion(self, id_field, data):
         detector_ins = detector_interface.Detector()
-        logging.info(data)
+        logging.debug(data)
         payload = detector_ins.detect_license_from_fs_location(
             fs_location=data["src_file"]
         )
-        logging.info(payload)
+        logging.debug(payload)
         if len(payload) == 0:
             return 0
 
