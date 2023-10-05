@@ -33,14 +33,8 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
 
     @extend_schema(responses=DetectionSerializer)
     def post(self, request, format=None):
-        """Creates a detection record
-
-        Args:
-            request (_type_): _description_
-            format (_type_, optional): _description_. Defaults to None.
-
-        Returns:
-            _type_: _description_
+        """Toma el origen en el sistema de archivos de una imagen y detecta
+        la presencia de placas de licencia vehicular.
         """
         data = request.data
 
@@ -59,7 +53,12 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
             logging.warning("Celery-redis worker down")
 
         if not worker_up_flag:
-            self.detector_funtion(id_field, data)
+            operation_code = self.detector_funtion(id_field, data)
+        if operation_code == 0:
+            return Response(
+                {"error": "Malformed request", "data": request.data},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         payload = {}
         payload["id_ref"] = id_field
@@ -72,9 +71,14 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
     @extend_schema(exclude=True)
     def detector_funtion(self, id_field, data):
         detector_ins = detector_interface.Detector()
+        logging.info(data)
         payload = detector_ins.detect_license_from_fs_location(
             fs_location=data["src_file"]
         )
+        logging.info(payload)
+        if len(payload) == 0:
+            return 0
+
         payload["detection"]["id_ref"] = id_field
         # print(f"payload: {payload}")
         serializer = DetectionSerializer(data=payload.get("detection"))
@@ -87,3 +91,4 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
         print("-------------------------------------------") """
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+        return 1

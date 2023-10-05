@@ -31,7 +31,7 @@ class FileManagerUtil:
         return self._tmp_folder
 
     @property
-    def folder_list(self):    
+    def folder_list(self):
         return self._folder_list
 
     def __init__(self):
@@ -67,3 +67,20 @@ class FileManagerUtil:
             crop.save(img_crop_loc_list[index], "png")
 
         return img_ori_name, img_crop_name_list, img_ori_loc, img_crop_loc_list
+
+    @staticmethod
+    def is_valid_file_path(file_path):
+        # Check for type of str
+        if not type(file_path) == str:
+            return False
+
+        # Check if the path is an absolute path
+        if not os.path.isabs(file_path):
+            return False
+
+        # Check if the path exists on the filesystem
+        if not os.path.exists(file_path):
+            return False
+
+        # If both conditions are met, it's a valid file path
+        return True

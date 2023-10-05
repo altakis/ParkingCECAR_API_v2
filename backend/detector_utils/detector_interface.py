@@ -17,6 +17,10 @@ class Detector:
         self.save_img_util = siu
 
     def detect_license_from_fs_location(self, fs_location, options=None):
+        check_path_validity = self.save_img_util.is_valid_file_path(fs_location)
+        if not check_path_validity:
+            return {}
+
         # load data
         model_name = ""
         url_input = None
