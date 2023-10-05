@@ -5,7 +5,7 @@ from api.models import Detection
 from api.serializers import DetectionPOSToptionsSerializer, DetectionSerializer
 from api.tasks import background_detection
 from core import celery_utils
-from detector_utils import detector_interface
+from detector_utils import FileManagerUtil, detector_interface
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins, status
 from rest_framework.response import Response
@@ -76,9 +76,9 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
                 else:
                     base64_filename = None
                 data[
-                    src_file
-                ] = detector_interface.save_img_util.save_base64_string_to_image_file_to_tmp_folder(
-                    base64_str=src_file, base64_filename=base64_filename
+                    "src_file"
+                ] = FileManagerUtil.FileManagerUtil().save_base64_string_to_image_file_to_tmp_folder(
+                    base64_str=src_file, base64_file_name=base64_filename
                 )
             # if operation_code is 0 then do nothing.
             # if operation_code == 0: pass
