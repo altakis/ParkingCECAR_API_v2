@@ -5,18 +5,18 @@ from typing import List
 
 from PIL import Image
 
+from.constants import FOLDERS
 
 class FileManagerUtil:
-    _BASE_DIR = os.path.join(
-        Path(__file__).resolve().parent.parent, "detection_imgs"
-    )
-    _img_folder = os.path.join(_BASE_DIR, "original")
-    _crop_folder = os.path.join(_BASE_DIR, "crops")
-    _tmp_folder = os.path.join(_BASE_DIR, "tmp")
+    _folder_list = FOLDERS
+    _base_dir = FOLDERS[0]
+    _img_folder = FOLDERS[1]
+    _crop_folder = FOLDERS[2]
+    _tmp_folder = FOLDERS[3]
 
     @property
     def BASE_DIR(self):
-        return self._BASE_DIR
+        return self._base_dir
 
     @property
     def img_folder(self):
@@ -30,16 +30,15 @@ class FileManagerUtil:
     def tmp_folder(self):
         return self._tmp_folder
 
+    @property
+    def folder_list(self):    
+        return self._folder_list
+
     def __init__(self):
-        self._folders = [
-            self.BASE_DIR,
-            self.img_folder,
-            self.crop_folder,
-            self.tmp_folder,
-        ]
+        self.initialize_folders()
 
     def initialize_folders(self):
-        for path in self._folders:
+        for path in self.folder_list:
             isExist = os.path.exists(path)
             if not isExist:
                 os.makedirs(path)

@@ -38,3 +38,10 @@ class DetectionRequestSerializer(serializers.ModelSerializer):
 class IdRefOptionsSerializer(serializers.Serializer):
     pred = serializers.BooleanField()
     crop = serializers.BooleanField()
+
+class DetectionPOSToptions(serializers.Serializer):
+    src_file = serializers.StringRelatedField()
+    base64_str = serializers.StringRelatedField()
+    #Return base64 strings of results
+    pred = serializers.BooleanField()
+    crop = serializers.BooleanField()
