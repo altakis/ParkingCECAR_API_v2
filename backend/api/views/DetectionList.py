@@ -46,21 +46,38 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
             # 2: Both src parameter are malformed
             operation_code = 2
             if src_file_exist:
+                src_file = data["src_file"]
                 check_path_validity = (
                     detector_interface.save_img_util.is_valid_file_path(
-                        data["src_file"]
+                        src_file
                     )
                 )
                 if check_path_validity:
                     operation_code = 0
                 elif src_base64_exist and (not len(data["src_base64"]) == 0):
+                    src_file = data["src_base64"]
                     operation_code = 1
 
+            # Shortcircuit operation if operation_code is equal to 2.
             if operation_code == 2:
                 return Response(
                     {"error": "Malformed request", "data": data},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            # Otherwise if operation_code is 1 then transform base64_string
+            # to an image and save it to the tmp_folder
+            if operation_code == 1:
+                if "base64_filename" in data:
+                    base64_filename = data["base64_str_file_name"]
+                else:
+                    base64_filename = None
+                data[
+                    src_file
+                ] = detector_interface.save_img_util.save_base64_string_to_image_file_to_tmp_folder(
+                    base64_str=src_file, base64_filename=base64_filename
+                )
+            # if operation_code is 0 then do nothing.
+            # if operation_code == 0: pass
 
             id_field = uuid.uuid4()
 
@@ -114,4 +131,3 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
         print("-------------------------------------------") """
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-        return 1

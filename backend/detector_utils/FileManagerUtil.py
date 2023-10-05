@@ -3,9 +3,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+from detector_utils.base64_utils import decode
 from PIL import Image
 
-from.constants import FOLDERS
+from .constants import FOLDERS
+
 
 class FileManagerUtil:
     _folder_list = FOLDERS
@@ -85,4 +87,27 @@ class FileManagerUtil:
         # If both conditions are met, it's a valid file path
         return True
 
-    #TODO: Create a method that takes a base64_src: str and saves said image to tmp_folder
+    @staticmethod
+    def save_img_to_folder(
+        img: Image.Image, folder_path: str, file_name: str = None
+    ) -> str:
+        if file_name is not None:
+            new_img_file_name = file_name
+        else:
+            now = datetime.now()
+            dt_string = now.strftime("%Y_%m_%d__%H_%M_%S")
+            new_img_file_name = f"{dt_string}.png"
+
+        save_path = os.path.join(folder_path, new_img_file_name)
+        img.save(save_path, "png")
+        return save_path
+
+    def save_base64_string_to_image_file_to_tmp_folder(
+        self, base64_str: str, base64_file_name: str = None
+    ) -> str:
+        imported_img: Image.Image = decode(base64_str)
+        if base64_file_name is not None:
+            return self.save_img_to_folder(
+                imported_img, self.tmp_folder, base64_file_name
+            )
+        return self.save_img_to_folder(imported_img, self.tmp_folder)
