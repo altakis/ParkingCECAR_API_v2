@@ -29,10 +29,7 @@ class license_detector:
     def __init__(
         self, model="", gpu_available=False, ocr_verbose=False
     ) -> None:
-        if len(model) == 0:
-            self._model = license_detector._default_model
-        else:
-            self._model = model
+        self._model = license_detector._default_model if len(model) == 0 else model
         self._reader = easyocr.Reader(
             ["en"], gpu=gpu_available, verbose=ocr_verbose
         )
@@ -52,9 +49,7 @@ class license_detector:
 
     def get_original_image(self, url_input):
         if validators.url(url_input):
-            image = Image.open(requests.get(url_input, stream=True).raw)
-
-            return image
+            return Image.open(requests.get(url_input, stream=True).raw)
 
     def fig2img(self, fig):
         buf = io.BytesIO()
@@ -64,8 +59,7 @@ class license_detector:
         basewidth = 750
         wpercent = basewidth / float(pil_img.size[0])
         hsize = int((float(pil_img.size[1]) * float(wpercent)))
-        img = pil_img.resize((basewidth, hsize), Image.Resampling.LANCZOS)
-        return img
+        return pil_img.resize((basewidth, hsize), Image.Resampling.LANCZOS)
 
     def make_prediction(self, img, feature_extractor, model):
         inputs = feature_extractor(img, return_tensors="pt")
@@ -151,10 +145,7 @@ class license_detector:
 
             result[f"det_{index}"] = f"{text}_{score}"
 
-        if len(result) > 0:
-            return result
-
-        return None
+        return result if result else None
 
     def get_ocr_output(self, crop_img_list: List[Image.Image], crop_error: int):
         start_time_ocr = time.perf_counter()

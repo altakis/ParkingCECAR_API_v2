@@ -11,7 +11,7 @@ def encode(source_image: Union[str, Image.Image]) -> str:
         image = Image.open(source_image)
     elif type(source_image) == Image.Image:
         image = source_image
-    
+
     # Convert the PIL image to a binary stream (BytesIO)
     image_bytesio = BytesIO()
     image.save(
@@ -22,11 +22,7 @@ def encode(source_image: Union[str, Image.Image]) -> str:
     image_binary = image_bytesio.getvalue()
 
     # Encode the binary data as Base64
-    image_base64 = base64.b64encode(image_binary).decode(
-        "utf-8"
-    )  # Convert to a string
-
-    return image_base64
+    return base64.b64encode(image_binary).decode("utf-8")
 
 def decode(source_image: str) -> Image.Image:
     # Decode the Base64 string to binary data
@@ -36,8 +32,6 @@ def decode(source_image: str) -> Image.Image:
     image_bytesio = BytesIO(image_binary)
 
     # Open the image using Pillow
-    image = Image.open(image_bytesio)
-
-    return image
+    return Image.open(image_bytesio)
 
 
