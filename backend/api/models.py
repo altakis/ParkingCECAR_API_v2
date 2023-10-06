@@ -1,15 +1,15 @@
-import uuid
+from uuid import uuid4
 
 from django.db import models
 
 
 class Detection(models.Model):
     id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+        primary_key=True, default=uuid4, editable=False, unique=True
     )
     # Reference value corresponding at the moment in which
     # the system started the process
-    id_ref = models.UUIDField(default=uuid.uuid4)
+    id_ref = models.UUIDField(default=uuid4)
     record_name = models.TextField(null=True, blank=True)
     # Date in which this record in particular was created
     time_stamp = models.DateTimeField(null=True, blank=True)
@@ -30,8 +30,4 @@ class Detection(models.Model):
     ocr_text_result = models.TextField(null=True, blank=True)
 
     def __str__(self) -> str:
-        attributes_list_formatted = f"record: {self.record_name} || "
-        attributes_list_formatted += f"time_stamp:{self.time_stamp} || "
-        attributes_list_formatted += f"filename: {self.file_name} || "
-        attributes_list_formatted += f"ocr:{self.ocr_text_result}"
-        return attributes_list_formatted
+        return f"record: {self.record_name} time: {self.time_stamp} file: {self.file_name} ocr: {self.ocr_text_result}"
