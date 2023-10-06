@@ -8,7 +8,7 @@ from .serializers import DetectionSerializer
 def background_detection(id_field, data):
     detector_ins = detector_interface.Detector()
     payload = detector_ins.detect_license_from_fs_location(
-        fs_location=data["data"]["src_file"]
+        fs_location=data["src_file"]
     )
     payload["detection"]["id_ref"] = id_field
 

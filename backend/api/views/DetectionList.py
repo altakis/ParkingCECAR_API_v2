@@ -51,10 +51,8 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
             operation_code = 2
             if src_file_exist:
                 src_file = data["src_file"]
-                check_path_validity = (
-                    detector_interface.save_img_util.is_valid_file_path(
-                        src_file
-                    )
+                check_path_validity = FileManagerUtil.FileManagerUtil.is_valid_file_path(
+                    src_file
                 )
                 if check_path_validity:
                     operation_code = 0

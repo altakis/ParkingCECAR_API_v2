@@ -72,13 +72,13 @@ class FileManagerUtil:
 
     @staticmethod
     def is_valid_file_path(file_path):
-        # Check for type of str
+        """ # Check for type of str
         if not type(file_path) == str:
             return False
 
-        # Check if the path is an absolute path
+        # Check if the path is an absolute or relative path
         if not os.path.isabs(file_path):
-            return False
+            return False """
 
         # Check if the path exists on the filesystem
         if not os.path.exists(file_path):
