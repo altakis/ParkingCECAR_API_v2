@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from celery import shared_task
@@ -22,12 +23,13 @@ def background_detection(id_ref: UUID, data: dict):
     """
     # Detect license plate
     detection = detect_license(data["src_file"])
+    logging.info(detection)
 
     # Add custom generated reference id to payload
     detection["id_ref"] = id_ref
 
     # Save detection result
-    save_detection(detection)
+    save_detection(detection.detection)
 
 
 def detect_license(src_file):

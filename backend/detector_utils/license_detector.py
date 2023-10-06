@@ -228,7 +228,8 @@ class license_detector:
 
         # package data and return
         time_stamp = datetime.datetime.now()
-        data = {
+
+        return {
             "record_name": f"{time_stamp}_",
             "time_stamp": time_stamp,
             "viz_img": viz_img,
@@ -237,5 +238,3 @@ class license_detector:
             "processing_time_pred": round(detection_process_time, 20),
             "processing_time_ocr": round(ocr_process_time, 20),
         }
-
-        return data
