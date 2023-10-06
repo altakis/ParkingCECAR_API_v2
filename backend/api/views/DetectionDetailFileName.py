@@ -18,8 +18,8 @@ class DetectionDetailFileName(APIView):
     def get_objects(self, file_name: str):
         try:
             return Detection.objects.filter(file_name__icontains=file_name)
-        except Detection.DoesNotExist:
-            raise Http404
+        except Detection.DoesNotExist as e:
+            raise Http404 from e
 
     @extend_schema(responses=DetectionSerializer)
     def get(
