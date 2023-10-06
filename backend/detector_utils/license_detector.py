@@ -145,7 +145,7 @@ class license_detector:
 
             result[f"det_{index}"] = f"{text}_{score}"
 
-        return result if result else None
+        return result or None
 
     def get_ocr_output(self, crop_img_list: List[Image.Image], crop_error: int):
         start_time_ocr = time.perf_counter()
