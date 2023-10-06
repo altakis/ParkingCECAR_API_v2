@@ -159,6 +159,10 @@ class license_detector:
     def get_ocr_output(self, crop_img_list: List[Image.Image], crop_error: int):
         start_time_ocr = time.perf_counter()
 
+        # To prevent type errors with enumerate function below
+        if type(crop_img_list) == List:
+            crop_img_list = list(crop_img_list)
+
         # OCR license plate
         license_text_ocr_result = {}
         for index, img in enumerate(crop_img_list):
