@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from celery import shared_task
 from detector_utils import detector_interface
 
@@ -5,21 +7,35 @@ from .serializers import DetectionSerializer
 
 
 @shared_task
-def background_detection(id_field, data):
-    detector_ins = detector_interface.Detector()
-    payload = detector_ins.detect_license_from_fs_location(
-        fs_location=data["src_file"]
-    )
-    payload["detection"]["id_ref"] = id_field
+def background_detection(id_ref: UUID, data: dict):
+    """
+    Detects license plates in images and saves the results to the database.
 
-    # print(f"payload: {payload}")
-    serializer = DetectionSerializer(data=payload.get("detection"))
-    """ print("1. validity--------------------------------")
-    print(f"serializer: valid? {serializer.is_valid()}")
-    print("2. errors  --------------------------------")
-    print(serializer.errors)
-    print("3. data    --------------------------------")
-    print(serializer.validated_data)
-    print("-------------------------------------------") """
-    if serializer.is_valid():
-        serializer.save()
+    The id_ref and data dict are passed to the shared task background_detection.
+    The image is extracted from the data dict and passed to detect_license which handles
+    the actual license plate detection using the Detector class. The results are returned and
+    the id_ref is added. Finally, save_detection serializes the data and saves it to the database.
+
+    Args:
+        id_ref (UUID): The unique id for this detection.
+        data (dict): The data dict containing the source image file path.
+    """
+    # Detect license plate
+    detection = detect_license(data["src_file"])
+
+    # Add custom generated reference id to payload
+    detection["id_ref"] = id_ref
+
+    # Save detection result
+    save_detection(detection)
+
+
+def detect_license(src_file):
+    detector = detector_interface.Detector()
+    return detector.detect_license_from_fs_location(src_file)
+
+
+def save_detection(detection):
+    Serializer = DetectionSerializer(data=detection)
+    if Serializer.is_valid():
+        Serializer.save()

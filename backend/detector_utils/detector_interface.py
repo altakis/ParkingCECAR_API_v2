@@ -54,26 +54,20 @@ class Detector:
         detection["pred_loc"] = img_ori_loc
         detection["crop_loc"] = " ".join(img_crop_loc_list)
 
-        payload = {
+        return {
             "detection": detection,
         }
-        return payload
 
     @staticmethod
     def extract_file_name(image_path):
         # Normalize the path to use the appropriate path separator for the current OS
         normalized_path = os.path.normpath(image_path)
 
-        # Split the path to get the filename
-        filename = os.path.basename(normalized_path)
-
-        return filename
+        return os.path.basename(normalized_path)
 
     @staticmethod
     def encode_base64_image_to_send_by_json(detection, options):
-        payload = {}
-        payload["detection"] = detection
-
+        payload = {"detection": detection}
         # Create base64 strings from detection
         pred_json_base64 = None
         crop_json_base64 = None
@@ -110,19 +104,14 @@ class Detector:
         payload = {}
 
         try:
-            pred_json_base64 = query_params.get("pred")
-            if pred_json_base64:
+            if pred_json_base64 := query_params.get("pred"):
                 payload["pred_json_base64"] = pred_json_base64
         except Exception as e:
             logging.info(e, exc_info=True)
-            pass
-
         try:
-            crop_json_base64 = query_params.get("crop")
-            if crop_json_base64:
+            if crop_json_base64 := query_params.get("crop"):
                 payload["crop_json_base64"] = crop_json_base64
         except Exception as e:
             logging.info(e, exc_info=True)
-            pass
 
         return payload
