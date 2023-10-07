@@ -103,8 +103,7 @@ class FileManagerUtil:
     @staticmethod
     def generate_timestamp_now():
         now = datetime.now()
-        dt_string = now.strftime("%Y_%m_%d__%H_%M_%S")
-        return dt_string
+        return now.strftime("%Y_%m_%d__%H_%M_%S")
 
     def save_base64_string_to_image_file_to_tmp_folder(
         self, base64_str: str, base64_file_name: str = None
