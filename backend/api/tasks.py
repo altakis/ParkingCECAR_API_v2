@@ -23,13 +23,14 @@ def background_detection(id_ref: UUID, data: dict):
     """
     # Detect license plate
     detection = detect_license(data["src_file"])
-    logging.info(detection)
 
     # Add custom generated reference id to payload
-    detection["id_ref"] = id_ref
+    detection["detection"]["id_ref"] = id_ref
+    
+    logging.info(detection)
 
     # Save detection result
-    save_detection(detection.detection)
+    save_detection(detection.get("detection"))
 
 
 def detect_license(src_file):

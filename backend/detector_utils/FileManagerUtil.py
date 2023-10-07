@@ -71,7 +71,7 @@ class FileManagerUtil:
         return img_ori_name, img_crop_name_list, img_ori_loc, img_crop_loc_list
 
     @staticmethod
-    def is_valid_file_path(file_path: Union(str, Path)):
+    def is_valid_file_path(file_path: Union[str, Path]) -> bool:
         if isinstance(file_path, str):
         # Check if it's a valid absolute file path
             if os.path.isabs(file_path) and os.path.exists(file_path):
@@ -91,7 +91,7 @@ class FileManagerUtil:
         return False
 
     @staticmethod
-    def check_if_Path_obj_is_exists(file_path: Path):
+    def check_if_Path_obj_is_exists(file_path: Path) -> bool:
         return file_path.is_absolute() or file_path.exists()
 
     @staticmethod
