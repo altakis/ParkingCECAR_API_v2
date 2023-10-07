@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 from detector_utils.base64_utils import decode
 from PIL import Image
@@ -71,7 +71,7 @@ class FileManagerUtil:
         return img_ori_name, img_crop_name_list, img_ori_loc, img_crop_loc_list
 
     @staticmethod
-    def is_valid_file_path(file_path: str):
+    def is_valid_file_path(file_path: Union(str, Path)):
         if isinstance(file_path, str):
         # Check if it's a valid absolute file path
             if os.path.isabs(file_path) and os.path.exists(file_path):
