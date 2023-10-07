@@ -96,13 +96,16 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
                 logging.warning("Celery-redis worker down")
 
             if not worker_up_flag:
-                operation_code = self.detector_funtion(id_field, data)
+                self.detector_funtion(id_field, data)
 
             payload = {}
             payload["id_ref"] = id_field
             payload[
                 "msg"
-            ] = "Check back with that uuid in 30 secs at the endpoint /detections/ref/<uuid:id_ref>"
+            ] = """Check back with that uuid in 30 secs at the endpoint /detections/ref/<uuid:id_ref>.
+            If the detection process failed for any reason then it will
+            return a "detail": "Not found." dictionary as response.
+            """
 
             return Response(payload, status=status.HTTP_201_CREATED)
         return Response(
@@ -117,9 +120,6 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
         payload = detector_ins.detect_license_from_fs_location(
             fs_location=data["src_file"]
         )
-        logging.debug(payload)
-        if len(payload) == 0:
-            return 0
 
         payload["detection"]["id_ref"] = id_field
         logging.debug(payload)
