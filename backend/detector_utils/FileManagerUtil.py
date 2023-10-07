@@ -72,20 +72,18 @@ class FileManagerUtil:
 
     @staticmethod
     def is_valid_file_path(file_path):
-        """ # Check for type of str
-        if not type(file_path) == str:
+        # Check for type of str
+        if type(file_path) != str:
             return False
 
-        # Check if the path is an absolute or relative path
-        if not os.path.isabs(file_path):
-            return False """
-
-        # Check if the path exists on the filesystem
-        if not os.path.exists(file_path):
-            return False
-
+        # Check if the path is an absolute or relative path rejecting
+        # the relative paths to reduce ambiguity and avoid path transversal attacks. Finally, check if the path exists on the filesystem
         # If both conditions are met, it's a valid file path
-        return True
+        return (
+            bool(os.path.exists(file_path))
+            if os.path.isabs(file_path)
+            else False
+        )
 
     @staticmethod
     def save_img_to_folder(
@@ -93,8 +91,10 @@ class FileManagerUtil:
     ) -> str:
         if file_name is not None:
             new_img_file_name = file_name
-        else:            
-            new_img_file_name = f"{FileManagerUtil.generate_timestamp_now()}_.png"
+        else:
+            new_img_file_name = (
+                f"{FileManagerUtil.generate_timestamp_now()}_.png"
+            )
 
         save_path = os.path.join(folder_path, new_img_file_name)
         img.save(save_path, "png")
@@ -110,7 +110,9 @@ class FileManagerUtil:
     ) -> str:
         imported_img: Image.Image = decode(base64_str)
         if base64_file_name is not None:
-            base64_file_name = f"{self.generate_timestamp_now()}_{base64_file_name}"
+            base64_file_name = (
+                f"{self.generate_timestamp_now()}_{base64_file_name}"
+            )
             return self.save_img_to_folder(
                 imported_img, self.tmp_folder, base64_file_name
             )
