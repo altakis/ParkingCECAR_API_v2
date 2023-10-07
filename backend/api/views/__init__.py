@@ -1,4 +1,4 @@
 from .detection_list_create import DetectionList
 from .detection_detail_id import DetectionDetail
-from .detection__query_filename import DetectionDetailFileName
-from .detection_detail_id_ref_query_create import DetectionDetailIdRef
+from .detection__detail_filename_query import DetectionDetailFileName
+from .detection_detail_idref_query_create import DetectionDetailIdRef
