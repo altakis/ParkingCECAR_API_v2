@@ -71,19 +71,24 @@ class FileManagerUtil:
         return img_ori_name, img_crop_name_list, img_ori_loc, img_crop_loc_list
 
     @staticmethod
-    def is_valid_file_path(file_path):
-        # Check for type of str
-        if type(file_path) != str:
-            return False
+    def is_valid_file_path(file_path: str):
+        if isinstance(file_path, str):
+        # Check if it's a valid absolute file path
+            if os.path.isabs(file_path) and os.path.exists(file_path):
+                return True
 
-        # Check if the path is an absolute or relative path rejecting
-        # the relative paths to reduce ambiguity and avoid path transversal attacks. Finally, check if the path exists on the filesystem
-        # If both conditions are met, it's a valid file path
-        return (
-            bool(os.path.exists(file_path))
-            if os.path.isabs(file_path)
-            else False
-        )
+            # Check if it can be converted to a Path object
+            try:
+                Path(file_path)
+                return True
+            except (TypeError, ValueError):
+                pass
+
+        elif isinstance(file_path, Path):
+            # Check if it's an absolute or relative Path object
+            return file_path.is_absolute() or file_path.exists()
+
+        return False
 
     @staticmethod
     def save_img_to_folder(
@@ -91,10 +96,8 @@ class FileManagerUtil:
     ) -> str:
         if file_name is not None:
             new_img_file_name = file_name
-        else:
-            new_img_file_name = (
-                f"{FileManagerUtil.generate_timestamp_now()}_.png"
-            )
+        else:            
+            new_img_file_name = f"{FileManagerUtil.generate_timestamp_now()}_.png"
 
         save_path = os.path.join(folder_path, new_img_file_name)
         img.save(save_path, "png")
@@ -110,9 +113,7 @@ class FileManagerUtil:
     ) -> str:
         imported_img: Image.Image = decode(base64_str)
         if base64_file_name is not None:
-            base64_file_name = (
-                f"{self.generate_timestamp_now()}_{base64_file_name}"
-            )
+            base64_file_name = f"{self.generate_timestamp_now()}_{base64_file_name}"
             return self.save_img_to_folder(
                 imported_img, self.tmp_folder, base64_file_name
             )
