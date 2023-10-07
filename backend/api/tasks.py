@@ -26,7 +26,7 @@ def background_detection(id_ref: UUID, data: dict):
 
     # Add custom generated reference id to payload
     detection["detection"]["id_ref"] = id_ref
-    
+
     logging.info(detection)
 
     # Save detection result
@@ -39,6 +39,7 @@ def detect_license(src_file):
 
 
 def save_detection(detection):
-    Serializer = DetectionSerializer(data=detection)
-    if Serializer.is_valid():
-        Serializer.save()
+    serializer = DetectionSerializer(data=detection)
+    if serializer.is_valid(raise_exception=True):
+        logging.info(serializer.validated_data)
+        serializer.save()

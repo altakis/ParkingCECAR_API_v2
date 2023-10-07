@@ -51,8 +51,8 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
             operation_code = 2
             if src_file_exist:
                 src_file = data["src_file"]
-                check_path_validity = FileManagerUtil.FileManagerUtil.is_valid_file_path(
-                    src_file
+                check_path_validity = (
+                    FileManagerUtil.FileManagerUtil.is_valid_file_path(src_file)
                 )
                 if check_path_validity:
                     operation_code = 0
@@ -122,14 +122,9 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
             return 0
 
         payload["detection"]["id_ref"] = id_field
-        # print(f"payload: {payload}")
+        logging.debug(payload)
+
         serializer = DetectionSerializer(data=payload.get("detection"))
-        """ print("1. validity--------------------------------")
-        print(f"serializer: valid? {serializer.is_valid()}")
-        print("2. errors  --------------------------------")
-        print(serializer.errors)
-        print("3. data    --------------------------------")
-        print(serializer.validated_data)
-        print("-------------------------------------------") """
         if serializer.is_valid(raise_exception=True):
+            logging.info(serializer.validated_data)
             serializer.save()
