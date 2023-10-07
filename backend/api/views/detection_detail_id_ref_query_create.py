@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 from api.models import Detection
 from api.serializers import DetectionSerializer, IdRefOptionsSerializer
-from detector_utils.detector_interface import Detector as detector_interface
+from detector_utils.detector_interface import DetectorInterface
 from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins
@@ -56,7 +56,7 @@ class DetectionDetailIdRef(mixins.RetrieveModelMixin, generics.GenericAPIView):
         detection = self.get_object()
         serializer = DetectionSerializer(detection)
 
-        payload = detector_interface.check_for_base64_request_options(
+        payload = DetectorInterface.check_for_base64_request_options(
             serializer.data, request.data
         )
 

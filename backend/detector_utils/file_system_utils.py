@@ -9,7 +9,7 @@ from PIL import Image
 from .constants import FOLDERS
 
 
-class FileManagerUtil:
+class FileSystemInterface:
     _folder_list = FOLDERS
     _base_dir = FOLDERS[0]
     _img_folder = FOLDERS[1]
@@ -80,13 +80,13 @@ class FileManagerUtil:
             # Check if it can be converted to a Path object
             try:
                 file_path = Path(file_path)
-                return FileManagerUtil.check_if_Path_obj_is_exists(file_path)
+                return FileSystemInterface.check_if_Path_obj_is_exists(file_path)
             except (TypeError, ValueError):
                 pass
 
         elif isinstance(file_path, Path):
             # Check if it's an absolute or relative Path object
-            return FileManagerUtil.check_if_Path_obj_is_exists(file_path)
+            return FileSystemInterface.check_if_Path_obj_is_exists(file_path)
 
         return False
 
@@ -101,7 +101,7 @@ class FileManagerUtil:
         if file_name is not None:
             new_img_file_name = file_name
         else:            
-            new_img_file_name = f"{FileManagerUtil.generate_timestamp_now()}_.png"
+            new_img_file_name = f"{FileSystemInterface.generate_timestamp_now()}_.png"
 
         save_path = os.path.join(folder_path, new_img_file_name)
         img.save(save_path, "png")

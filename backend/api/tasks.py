@@ -34,7 +34,7 @@ def background_detection(id_ref: UUID, data: dict):
 
 
 def detect_license(src_file):
-    detector = detector_interface.Detector()
+    detector = detector_interface.DetectorInterface()
     return detector.detect_license_from_fs_location(src_file)
 
 

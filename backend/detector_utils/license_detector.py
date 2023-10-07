@@ -22,14 +22,14 @@ from transformers import (
 from .constants import COLORS, MODELS, DEFAULT_MODEL
 
 
-class license_detector:
+class LicenseOCRDetector:
     _models = MODELS
     _default_model = DEFAULT_MODEL
 
     def __init__(
         self, model="", gpu_available=False, ocr_verbose=False
     ) -> None:
-        self._model = license_detector._default_model if len(model) == 0 else model
+        self._model = LicenseOCRDetector._default_model if len(model) == 0 else model
         self._reader = easyocr.Reader(
             ["en"], gpu=gpu_available, verbose=ocr_verbose
         )
@@ -41,10 +41,10 @@ class license_detector:
     @model.setter
     def model(self, model) -> None:
         if len(model) > 0:
-            if model in license_detector._models:
+            if model in LicenseOCRDetector._models:
                 self._model = model
             else:
-                self._model = license_detector._default_model
+                self._model = LicenseOCRDetector._default_model
         return self.model
 
     def get_original_image(self, url_input):
