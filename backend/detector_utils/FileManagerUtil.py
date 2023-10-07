@@ -79,16 +79,20 @@ class FileManagerUtil:
 
             # Check if it can be converted to a Path object
             try:
-                Path(file_path)
-                return True
+                file_path = Path(file_path)
+                return FileManagerUtil.check_if_Path_obj_is_exists(file_path)
             except (TypeError, ValueError):
                 pass
 
         elif isinstance(file_path, Path):
             # Check if it's an absolute or relative Path object
-            return file_path.is_absolute() or file_path.exists()
+            return FileManagerUtil.check_if_Path_obj_is_exists(file_path)
 
         return False
+
+    @staticmethod
+    def check_if_Path_obj_is_exists(file_path: Path):
+        return file_path.is_absolute() or file_path.exists()
 
     @staticmethod
     def save_img_to_folder(
