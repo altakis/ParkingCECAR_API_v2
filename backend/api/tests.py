@@ -75,3 +75,33 @@ class APIDetectionTestCase(APITestCase):
                 f"{DETECTION_DETAIL_IDREF}/{detection.id_ref}/"
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_all_detections_by_id(self):
+        """
+        test DetectionDetailId delete method
+        """
+        for detection in self.detections:
+            response = self.client.delete(
+                f"{DETECTION_DETAIL_ID}/{detection.id}/"
+            )
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(response.data, None)
+
+    def test_get_all_items_after_delete_all_operation(self):
+        expected_count = 8
+        response = self.client.get(DETECTIONS_ALL_CREATE_ENDPOINT)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.detections.count(), expected_count)
+
+        for detection in self.detections:
+            expected_count = expected_count - 1
+
+            response = self.client.delete(
+                f"{DETECTION_DETAIL_ID}/{detection.id}/"
+            )
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            self.assertEqual(response.data, None)
+
+            response = self.client.get(DETECTIONS_ALL_CREATE_ENDPOINT)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), expected_count)
