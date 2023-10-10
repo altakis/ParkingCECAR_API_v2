@@ -24,7 +24,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 RUN set -e; \
     python -m pip install --upgrade pip ;\
-    python -m pip install flask;
+    python -m pip install -r /app/requirements.txt ;\
+    python -m manage makemigrations; \
+    python -m manage migrate; \
+    python -m manage test;
 
 # Execution stage
 FROM python:3.11.6-bookworm
@@ -35,4 +38,6 @@ WORKDIR /app
 
 ENV PATH="/opt/venv/bin:$PATH"
 
-CMD ["python", "-m", "server"]
+EXPOSE 8000
+
+ENTRYPOINT ["/code/docker/entrypoints/entrypoint.sh"]

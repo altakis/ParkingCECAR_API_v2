@@ -1,21 +1,41 @@
-FROM python:3.11.6-bookworm
+# Preparation stage
+FROM python:3.11.6-bookworm as builder
 
-ENV PYTHONUNBUFFERED 1
+WORKDIR /app
+COPY . /app/
+
 ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc
 
 RUN set -e; \
     apt-get update ;\
     apt-get -y install netcat-traditional ;\
     apt-get -y install gettext ;\
-    apt-get -y  install httpie; \
-    pip install --upgrade pip \
+    curl -SsL https://packages.httpie.io/deb/KEY.gpg | gpg --dearmor -o /usr/share/keyrings/httpie.gpg ;\
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/httpie.gpg] https://packages.httpie.io/deb ./" > /etc/apt/sources.list.d/httpie.list ;\
+    apt update ;\
+    apt install httpie -y ;
 
-    RUN mkdir /code
-COPY . /code/
-WORKDIR /code
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 RUN set -e; \
-    /usr/local/bin/python -m pip install --upgrade pip ;\
-    python -m pip install -r /code/requirements.txt ;
+    python -m pip install --upgrade pip ;\
+    python -m pip install -r /app/requirements.txt ;\
+    python -m manage makemigrations; \
+    python -m manage migrate; \
+    python -m manage test;
 
-ENTRYPOINT ["python", "-m","celery -A core worker -l DEBUG -P gevent"]
+# Execution stage
+FROM python:3.11.6-bookworm
+
+COPY --from=builder /opt/venv /opt/venv
+
+WORKDIR /app
+
+ENV PATH="/opt/venv/bin:$PATH"
+
+CMD ["python", "-m","celery -A core worker -l DEBUG -P gevent", "&"]
