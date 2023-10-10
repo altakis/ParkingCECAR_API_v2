@@ -1,12 +1,12 @@
 version: '3.7'
 services:
 
-  api:
+  django:
     build:
       context: ./backend
       dockerfile: docker/docker_files/Dockerfile
     restart: unless-stopped
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python -m manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/code
     ports:
@@ -14,12 +14,24 @@ services:
     env_file:
       - .env
 
-  app:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    command: redis-server
+    volumes:
+      - /path/to/host/redis-data:/data  # For Redis data
+  
+  celery:
     build:
       context: .
-      dockerfile: backend/docker/docker_files/Dockerfile_app
+      dockerfile: backend/docker/docker_files/Dockerfile_celery
+    depends_on:
+      - redis
+      - django
     platform: linux/amd64
     restart: unless-stopped
-    ports:
-      - 5000:5000
+    env_file:
+      - .env
 
