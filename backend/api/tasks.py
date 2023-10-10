@@ -2,7 +2,7 @@ import logging
 from uuid import UUID
 
 from celery import shared_task
-from detector_utils import detector_interface
+from detector_utils import inference_interface
 
 from .serializers import DetectionSerializer
 
@@ -34,7 +34,7 @@ def background_detection(id_ref: UUID, data: dict):
 
 
 def detect_license(src_file):
-    detector = detector_interface.DetectorInterface()
+    detector = inference_interface.DetectorInterface()
     return detector.detect_license_from_fs_location(src_file)
 
 

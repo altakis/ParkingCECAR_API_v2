@@ -5,7 +5,7 @@ from api.models import Detection
 from api.serializers import DetectionPOSToptionsSerializer, DetectionSerializer
 from api.tasks import background_detection
 from core import celery_utils
-from detector_utils import detector_interface, file_system_utils
+from detector_utils import file_system_utils, inference_interface
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins, status
 from rest_framework.response import Response
@@ -115,7 +115,7 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
 
     @extend_schema(exclude=True)
     def detector_funtion(self, id_field, data):
-        detector_ins = detector_interface.DetectorInterface()
+        detector_ins = inference_interface.DetectorInterface()
         logging.debug(data)
         payload = detector_ins.detect_license_from_fs_location(
             fs_location=data["src_file"]

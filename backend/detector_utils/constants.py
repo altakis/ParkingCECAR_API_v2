@@ -10,12 +10,12 @@ IMG_BASE_DIR = os.path.join(
 IMGS_FOLDER = os.path.join(IMG_BASE_DIR, "original")
 CROPS_FOLDER = os.path.join(IMG_BASE_DIR, "crops")
 TMP_FOLDER = os.path.join(IMG_BASE_DIR, "tmp")
-FOLDERS = [
-    IMG_BASE_DIR,
-    IMGS_FOLDER,
-    CROPS_FOLDER,
-    TMP_FOLDER,
-]
+FOLDERS = {
+    "base_dir": IMG_BASE_DIR,
+    "img_folder": IMGS_FOLDER,
+    "crops_folder": CROPS_FOLDER,
+    "tmp_folder": TMP_FOLDER,
+}
 
 
 # colors for visualization

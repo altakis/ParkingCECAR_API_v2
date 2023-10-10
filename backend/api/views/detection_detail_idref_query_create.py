@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 from api.models import Detection
 from api.serializers import DetectionSerializer, IdRefOptionsSerializer
-from detector_utils.detector_interface import DetectorInterface
+from detector_utils.inference_interface import DetectorInterface
 from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins

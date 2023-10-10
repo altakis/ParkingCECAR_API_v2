@@ -11,10 +11,10 @@ from .constants import FOLDERS
 
 class FileSystemInterface:
     _folder_list = FOLDERS
-    _base_dir = FOLDERS[0]
-    _img_folder = FOLDERS[1]
-    _crop_folder = FOLDERS[2]
-    _tmp_folder = FOLDERS[3]
+    _base_dir = FOLDERS["base_dir"]
+    _img_folder = FOLDERS["img_folder"]
+    _crop_folder = FOLDERS["crops_folder"]
+    _tmp_folder = FOLDERS["tmp_folder"]
 
     @property
     def BASE_DIR(self):
@@ -40,7 +40,7 @@ class FileSystemInterface:
         self.initialize_folders()
 
     def initialize_folders(self):
-        for path in self.folder_list:
+        for path in self.folder_list.values():
             isExist = os.path.exists(path)
             if not isExist:
                 os.makedirs(path)
