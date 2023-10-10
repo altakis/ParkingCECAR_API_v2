@@ -9,10 +9,13 @@ RUN set -e; \
     apt-get -y install gettext ;\
     apt-get -y  install httpie; \
     pip install --upgrade pip \
-    pip install flask
 
-RUN mkdir /code
+    RUN mkdir /code
+COPY . /code/
 WORKDIR /code
-COPY ./server.py .
+
+RUN set -e; \
+    /usr/local/bin/python -m pip install --upgrade pip ;\
+    python -m pip install -r /code/requirements.txt ;
 
 ENTRYPOINT ["python", "-m","celery -A core worker -l DEBUG -P gevent"]
