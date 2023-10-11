@@ -8,7 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc
+    apt-get install -y --no-install-recommends gcc; \
+    #apt-get install ffmpeg libsm6 libxext6 libgl1 -y;
+    apt-get install libgl1 libglib2.0-0 -y;
 
 RUN set -e; \
     apt-get update ;\
@@ -40,4 +42,4 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 EXPOSE 8000
 
-ENTRYPOINT ["/code/docker/entrypoints/entrypoint.sh"]
+ENTRYPOINT ["/app/docker/entrypoints/entrypoint.sh"]

@@ -1,21 +1,5 @@
 version: '0.1'
 services:
-
-  django:
-    build:
-      context: ./backend
-      dockerfile: docker/docker_files/Dockerfile_django
-    depends_on:
-      - redis
-    restart: unless-stopped
-    #command: python -m manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./backend:/code
-    ports:
-      - 8000:8000
-    env_file:
-      - ./backend/.env
-
   redis:
     image: redis:latest
     ports:
@@ -33,3 +17,19 @@ services:
     restart: unless-stopped
     ports:
       - 5000:5000
+
+  django:
+    build:
+      context: ./backend
+      dockerfile: docker/docker_files/Dockerfile_django
+    depends_on:
+      - redis
+    restart: unless-stopped
+    #command: python -m manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/code
+    ports:
+      - 8000:8000
+    env_file:
+      - ./backend/.env
+  
