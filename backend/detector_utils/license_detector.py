@@ -29,7 +29,9 @@ class LicenseOCRDetector:
     def __init__(
         self, model="", gpu_available=False, ocr_verbose=False
     ) -> None:
-        self._model = LicenseOCRDetector._default_model if len(model) == 0 else model
+        self._model = (
+            LicenseOCRDetector._default_model if len(model) == 0 else model
+        )
         self._reader = easyocr.Reader(
             ["en"], gpu=gpu_available, verbose=ocr_verbose
         )
@@ -151,8 +153,8 @@ class LicenseOCRDetector:
         start_time_ocr = time.perf_counter()
 
         # To prevent type errors with enumerate function below
-        if type(crop_img_list) == List:
-            crop_img_list = list(crop_img_list)
+        if type(crop_img_list) != List:
+            crop_img_list = [crop_img_list]
 
         # OCR license plate
         license_text_ocr_result = {}
@@ -200,6 +202,15 @@ class LicenseOCRDetector:
             # see Gradio (https://www.gradio.app/docs/image)
             # specially regarding mirror_webcam attribute
             # image = image.transpose(Image.FLIP_LEFT_RIGHT)
+
+        print("---"*5)
+        print(image)
+        print("---"*5)
+        #image = image.convert("RGB")
+
+        """ new_size = (640, 480)
+        # Resize the image to the new size
+        image = image.resize(new_size) """
 
         # Make prediction
         processed_outputs = self.make_prediction(
