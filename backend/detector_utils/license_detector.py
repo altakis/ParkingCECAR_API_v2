@@ -157,7 +157,7 @@ class LicenseOCRDetector:
             obj_index = f"r_{index}"
             try:
                 width, height = img.size
-                new_size = tuple(int(width * 1.5), int(height * 1.5))
+                new_size = (int(width * 1.5), int(height * 1.5))
                 img = img.resize(new_size)
                 license_text_ocr_result[obj_index] = self.read_license_plate(
                     img
