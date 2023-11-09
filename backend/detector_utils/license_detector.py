@@ -6,7 +6,6 @@ from typing import List
 
 import cv2
 import easyocr
-import numpy as np
 import requests
 import torch
 import validators
@@ -101,7 +100,7 @@ class LicenseOCRDetector:
         if id2label is not None:
             labels = [id2label[x] for x in labels]
 
-        img_array = np.array(img)
+        img_array = asarray(img)
         for score, (xmin, ymin, xmax, ymax), label in zip(
             scores, boxes, labels
         ):
@@ -145,22 +144,21 @@ class LicenseOCRDetector:
 
             text = text.upper().strip()
 
-            result[f"det_{index}"] = f"{text}_{score}"
+            result[f"dt_{index}"] = f"{text}_{score:.4}"
 
         return result or None
 
     def get_ocr_output(self, crop_img_list: List[Image.Image], crop_error: int):
         start_time_ocr = time.perf_counter()
 
-        # To prevent type errors with enumerate function below
-        if type(crop_img_list) != List:
-            crop_img_list = [crop_img_list]
-
         # OCR license plate
         license_text_ocr_result = {}
         for index, img in enumerate(crop_img_list):
-            obj_index = f"obj_{index}"
+            obj_index = f"r_{index}"
             try:
+                width, height = img.size
+                new_size = tuple(int(width * 1.5), int(height * 1.5))
+                img = img.resize(new_size)
                 license_text_ocr_result[obj_index] = self.read_license_plate(
                     img
                 )
@@ -202,15 +200,6 @@ class LicenseOCRDetector:
             # see Gradio (https://www.gradio.app/docs/image)
             # specially regarding mirror_webcam attribute
             # image = image.transpose(Image.FLIP_LEFT_RIGHT)
-
-        print("---"*5)
-        print(image)
-        print("---"*5)
-        #image = image.convert("RGB")
-
-        """ new_size = (640, 480)
-        # Resize the image to the new size
-        image = image.resize(new_size) """
 
         # Make prediction
         processed_outputs = self.make_prediction(

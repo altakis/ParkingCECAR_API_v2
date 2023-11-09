@@ -2,7 +2,7 @@ import logging
 import uuid
 
 from api.models import Detection
-from api.serializers import DetectionPOSToptionsSerializer, DetectionSerializer
+from api.serializers import DetectionPOSTOptionsSerializer, DetectionSerializer
 from api.tasks import background_detection
 from core import celery_utils
 from detector_utils import file_system_utils, inference_interface
@@ -31,9 +31,9 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
         """
         return self.list(self, request, *args, **kwargs)
 
-    @extend_schema(
+    @extend_schema(        
         responses=DetectionSerializer,
-        request=DetectionPOSToptionsSerializer,
+        request=DetectionPOSTOptionsSerializer,
     )
     def post(self, request, format=None):
         """Toma el origen en el sistema de archivos de una imagen y detecta
