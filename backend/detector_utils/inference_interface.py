@@ -17,11 +17,18 @@ class DetectorInterface:
         self.save_img_util = siu
 
     def detect_license_from_fs_location(self, fs_location, options=None):
+        input_img = Image.open(fs_location)
+        if input_img.mode != "RGB":
+            input_img = input_img.convert('RGB')        
+        # Experimental size scaling for more accurate ocr
+        width, height = input_img.size
+        new_size = (int(width * 3), int(height * 3))
+        input_img = input_img.resize(new_size)        
         # load data
         model_name = ""
         url_input = None
         image_input = None
-        webcam_input = Image.open(fs_location)
+        webcam_input = Image.open(fs_location).convert('RGB')
         threshold = 0.5
 
         detection = self.detector.detect_objects(

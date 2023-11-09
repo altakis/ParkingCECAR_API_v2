@@ -156,9 +156,10 @@ class LicenseOCRDetector:
         for index, img in enumerate(crop_img_list):
             obj_index = f"r_{index}"
             try:
+                """ # Experimental size scaling for more accurate ocr
                 width, height = img.size
                 new_size = (int(width * 1.5), int(height * 1.5))
-                img = img.resize(new_size)
+                img = img.resize(new_size) """
                 license_text_ocr_result[obj_index] = self.read_license_plate(
                     img
                 )
