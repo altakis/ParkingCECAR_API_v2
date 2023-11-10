@@ -105,21 +105,26 @@ class LicenseOCRDetector:
             scores, boxes, labels
         ):
             if label == "license-plates":
+                height, width, _ = img_array.shape
+                # linewidth and thickness
+                lw = max(round(sum((height, width)) / 2 * 0.003), 2)  # Line width.
+                tf = max(lw - 1, 1)  # Font thickness.
                 cv2.rectangle(
                     img_array,
                     (int(xmin), int(ymin)),
                     (int(xmax), int(ymax)),
                     (0, 255, 0),
-                    thickness=10,
+                    thickness=tf,
                 )
+                FONT_SCALE = 2e-3            
                 cv2.putText(
                     img=img_array,
                     text=f"{label}: {score:0.2f}",
                     org=(int(xmin), int(ymin)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=1,
+                    fontScale=min(width, height) * FONT_SCALE,
                     color=(0, 255, 255),
-                    thickness=1,
+                    thickness=tf,
                 )
 
         license_located_img = Image.fromarray(img_array)
