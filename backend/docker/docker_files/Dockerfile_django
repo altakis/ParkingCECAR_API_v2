@@ -1,0 +1,45 @@
+# Preparation stage
+FROM python:3.11.6-bookworm as builder
+
+WORKDIR /app
+COPY . /app/
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc; \
+    #apt-get install ffmpeg libsm6 libxext6 libgl1 -y;
+    apt-get install libgl1 libglib2.0-0 -y;
+
+RUN set -e; \
+    apt-get update ;\
+    apt-get -y install netcat-traditional ;\
+    apt-get -y install gettext ;\
+    curl -SsL https://packages.httpie.io/deb/KEY.gpg | gpg --dearmor -o /usr/share/keyrings/httpie.gpg ;\
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/httpie.gpg] https://packages.httpie.io/deb ./" > /etc/apt/sources.list.d/httpie.list ;\
+    apt update ;\
+    apt install httpie -y ;
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN set -e; \
+    python -m pip install --upgrade pip ;\
+    python -m pip install -r /app/requirements.txt ;\
+    python -m manage makemigrations; \
+    python -m manage migrate; \
+    python -m manage test;
+
+# Execution stage
+FROM python:3.11.6-bookworm
+
+COPY --from=builder /opt/venv /opt/venv
+
+WORKDIR /app
+
+ENV PATH="/opt/venv/bin:$PATH"
+
+EXPOSE 8000
+
+ENTRYPOINT ["/app/docker/entrypoints/entrypoint.sh"]

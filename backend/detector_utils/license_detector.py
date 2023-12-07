@@ -6,7 +6,6 @@ from typing import List
 
 import cv2
 import easyocr
-import numpy as np
 import requests
 import torch
 import validators
@@ -22,14 +21,16 @@ from transformers import (
 from .constants import COLORS, MODELS, DEFAULT_MODEL
 
 
-class license_detector:
+class LicenseOCRDetector:
     _models = MODELS
     _default_model = DEFAULT_MODEL
 
     def __init__(
         self, model="", gpu_available=False, ocr_verbose=False
     ) -> None:
-        self._model = license_detector._default_model if len(model) == 0 else model
+        self._model = (
+            LicenseOCRDetector._default_model if len(model) == 0 else model
+        )
         self._reader = easyocr.Reader(
             ["en"], gpu=gpu_available, verbose=ocr_verbose
         )
@@ -41,10 +42,10 @@ class license_detector:
     @model.setter
     def model(self, model) -> None:
         if len(model) > 0:
-            if model in license_detector._models:
+            if model in LicenseOCRDetector._models:
                 self._model = model
             else:
-                self._model = license_detector._default_model
+                self._model = LicenseOCRDetector._default_model
         return self.model
 
     def get_original_image(self, url_input):
@@ -99,26 +100,31 @@ class license_detector:
         if id2label is not None:
             labels = [id2label[x] for x in labels]
 
-        img_array = np.array(img)
+        img_array = asarray(img)
         for score, (xmin, ymin, xmax, ymax), label in zip(
             scores, boxes, labels
         ):
             if label == "license-plates":
+                height, width, _ = img_array.shape
+                # linewidth and thickness
+                lw = max(round(sum((height, width)) / 2 * 0.003), 2)  # Line width.
+                tf = max(lw - 1, 1)  # Font thickness.
                 cv2.rectangle(
                     img_array,
                     (int(xmin), int(ymin)),
                     (int(xmax), int(ymax)),
                     (0, 255, 0),
-                    thickness=10,
+                    thickness=tf,
                 )
+                FONT_SCALE = 2e-3            
                 cv2.putText(
                     img=img_array,
                     text=f"{label}: {score:0.2f}",
                     org=(int(xmin), int(ymin)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=1,
+                    fontScale=min(width, height) * FONT_SCALE,
                     color=(0, 255, 255),
-                    thickness=1,
+                    thickness=tf,
                 )
 
         license_located_img = Image.fromarray(img_array)
@@ -143,22 +149,22 @@ class license_detector:
 
             text = text.upper().strip()
 
-            result[f"det_{index}"] = f"{text}_{score}"
+            result[f"dt_{index}"] = f"{text}_{score:.4}"
 
         return result or None
 
     def get_ocr_output(self, crop_img_list: List[Image.Image], crop_error: int):
         start_time_ocr = time.perf_counter()
 
-        # To prevent type errors with enumerate function below
-        if type(crop_img_list) == List:
-            crop_img_list = list(crop_img_list)
-
         # OCR license plate
         license_text_ocr_result = {}
         for index, img in enumerate(crop_img_list):
-            obj_index = f"obj_{index}"
+            obj_index = f"r_{index}"
             try:
+                """ # Experimental size scaling for more accurate ocr
+                width, height = img.size
+                new_size = (int(width * 1.5), int(height * 1.5))
+                img = img.resize(new_size) """
                 license_text_ocr_result[obj_index] = self.read_license_plate(
                     img
                 )

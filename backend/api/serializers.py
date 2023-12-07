@@ -19,6 +19,7 @@ class DetectionSerializer(serializers.ModelSerializer):
             "ocr_text_result",
         ]
 
+
 class DetectionRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Detection
@@ -35,14 +36,37 @@ class DetectionRequestSerializer(serializers.ModelSerializer):
             "ocr_text_result",
         ]
 
+
 class IdRefOptionsSerializer(serializers.Serializer):
     pred = serializers.BooleanField()
     crop = serializers.BooleanField()
 
-class DetectionPOSToptionsSerializer(serializers.Serializer):
-    src_file = serializers.StringRelatedField()
-    src_base64 = serializers.StringRelatedField()
-    src_base64_file_name = serializers.StringRelatedField()
-    #Return base64 strings of results
-    pred = serializers.BooleanField()
-    crop = serializers.BooleanField()
+
+class DetectionPOSTOptionsSerializer(serializers.Serializer):
+    src_file = serializers.CharField(
+        required=False,
+        max_length=None,
+        min_length=None,
+        allow_blank=True,
+        allow_null=True,
+        trim_whitespace=True,
+    )
+    src_base64 = serializers.CharField(
+        required=False,
+        max_length=None,
+        min_length=None,
+        allow_blank=True,
+        allow_null=True,
+        trim_whitespace=True,
+    )
+    src_base64_file_name = serializers.CharField(
+        required=False,
+        max_length=None,
+        min_length=None,
+        allow_blank=True,
+        allow_null=True,
+        trim_whitespace=True,
+    )
+    # Return base64 strings of results
+    pred = serializers.BooleanField(required=False, allow_null=True)
+    crop = serializers.BooleanField(required=False, allow_null=True)

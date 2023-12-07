@@ -3,25 +3,32 @@ import os
 
 from PIL import Image
 
-from . import FileManagerUtil, base64_utils, license_detector
+from . import base64_utils, file_system_utils, license_detector
 
 
-class Detector:
+class DetectorInterface:
     def __init__(self):
         # load license_detector
-        detector_obj = license_detector.license_detector()
+        detector_obj = license_detector.LicenseOCRDetector()
         self.detector = detector_obj
 
         # load fs utilities
-        siu = FileManagerUtil.FileManagerUtil()
+        siu = file_system_utils.FileSystemInterface()
         self.save_img_util = siu
 
     def detect_license_from_fs_location(self, fs_location, options=None):
+        input_img = Image.open(fs_location)
+        if input_img.mode != "RGB":
+            input_img = input_img.convert('RGB')        
+        # Experimental size scaling for more accurate ocr
+        width, height = input_img.size
+        new_size = (int(width * 3), int(height * 3))
+        input_img = input_img.resize(new_size)        
         # load data
         model_name = ""
         url_input = None
         image_input = None
-        webcam_input = Image.open(fs_location)
+        webcam_input = Image.open(fs_location).convert('RGB')
         threshold = 0.5
 
         detection = self.detector.detect_objects(
@@ -78,7 +85,7 @@ class Detector:
                 payload["pred_json_base64"] = pred_json_base64
                 payload[
                     "pred_json_base64_filename"
-                ] = Detector.extract_file_name(pred_loc)
+                ] = DetectorInterface.extract_file_name(pred_loc)
 
             if options.get("crop_json_base64") == True:
                 crop_loc = detection.get("crop_loc")
@@ -86,15 +93,15 @@ class Detector:
                 payload["crop_json_base64"] = crop_json_base64
                 payload[
                     "crop_json_base64_filename"
-                ] = Detector.extract_file_name(crop_loc)
+                ] = DetectorInterface.extract_file_name(crop_loc)
 
         return payload
 
     @staticmethod
     def check_for_base64_request_options(serializer_data, request_data):
         if len(request_data) > 0:
-            return Detector.encode_base64_image_to_send_by_json(
-                serializer_data, Detector.get_base64_query_params(request_data)
+            return DetectorInterface.encode_base64_image_to_send_by_json(
+                serializer_data, DetectorInterface.get_base64_query_params(request_data)
             )
         else:
             return serializer_data
