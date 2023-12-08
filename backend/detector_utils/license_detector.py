@@ -11,63 +11,32 @@ import torch
 import validators
 from numpy import asarray
 from PIL import Image
-from transformers import (
-    AutoFeatureExtractor,
-    DetrForObjectDetection,
-    YolosForObjectDetection,
-)
-
-# colors for visualization
-from .constants import COLORS, MODELS, DEFAULT_MODEL
+from .image_utils import fig2img, get_original_image
+from .ocr_utils import get_ocr_output
+from ultralytics import YOLO
 
 
-class LicenseOCRDetector:
-    _models = MODELS
-    _default_model = DEFAULT_MODEL
-
-    def __init__(
-        self, model="", gpu_available=False, ocr_verbose=False
-    ) -> None:
-        self._model = (
-            LicenseOCRDetector._default_model if len(model) == 0 else model
-        )
+class LicenseDetector:
+    def __init__(self, gpu_available=False, ocr_verbose=False) -> None:
+        self._model = YOLO("./ml_models/yolov8n_license_detector_20e.onnx")
         self._reader = easyocr.Reader(
             ["en"], gpu=gpu_available, verbose=ocr_verbose
         )
 
     @property
-    def model(self) -> str:
+    def model(self) -> YOLO:
         return self._model
 
     @model.setter
-    def model(self, model) -> None:
-        if len(model) > 0:
-            if model in LicenseOCRDetector._models:
-                self._model = model
-            else:
-                self._model = LicenseOCRDetector._default_model
+    def model(self, model_name) -> None:
         return self.model
 
-    def get_original_image(self, url_input):
-        if validators.url(url_input):
-            return Image.open(requests.get(url_input, stream=True).raw)
+    @property
+    def reader(self) -> easyocr.Reader:
+        return self._reader
 
-    def fig2img(self, fig):
-        buf = io.BytesIO()
-        fig.savefig(buf)
-        buf.seek(0)
-        pil_img = Image.open(buf)
-        basewidth = 750
-        wpercent = basewidth / float(pil_img.size[0])
-        hsize = int((float(pil_img.size[1]) * float(wpercent)))
-        return pil_img.resize((basewidth, hsize), Image.Resampling.LANCZOS)
-
-    def make_prediction(self, img, feature_extractor, model):
-        inputs = feature_extractor(img, return_tensors="pt")
-        outputs = model(**inputs)
-        img_size = torch.tensor([tuple(reversed(img.size))])
-        processed_outputs = feature_extractor.post_process(outputs, img_size)
-        return processed_outputs[0]
+    def make_prediction(self, img):
+        return self.model(img, stream=True)
 
     def visualize_prediction(
         self, img, output_dict, threshold=0.5, id2label=None
@@ -107,7 +76,9 @@ class LicenseOCRDetector:
             if label == "license-plates":
                 height, width, _ = img_array.shape
                 # linewidth and thickness
-                lw = max(round(sum((height, width)) / 2 * 0.003), 2)  # Line width.
+                lw = max(
+                    round(sum((height, width)) / 2 * 0.003), 2
+                )  # Line width.
                 tf = max(lw - 1, 1)  # Font thickness.
                 cv2.rectangle(
                     img_array,
@@ -116,7 +87,7 @@ class LicenseOCRDetector:
                     (0, 255, 0),
                     thickness=tf,
                 )
-                FONT_SCALE = 2e-3            
+                FONT_SCALE = 2e-3
                 cv2.putText(
                     img=img_array,
                     text=f"{label}: {score:0.2f}",
@@ -132,96 +103,24 @@ class LicenseOCRDetector:
             return license_located_img, license_located_img, crop_error
         return license_located_img, crop_img, crop_error
 
-    def read_license_plate(self, license_plate_crop: Image.Image):
-        # format PIL.Image input into grayscale
-        license_plate_crop_gray = cv2.cvtColor(
-            asarray(license_plate_crop), cv2.COLOR_BGR2GRAY
-        )
-        _, license_plate_crop_thresh = cv2.threshold(
-            license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV
-        )
-
-        detections = self._reader.readtext(license_plate_crop_thresh)
-
-        result = {}
-        for index, detection in enumerate(detections):
-            bbox, text, score = detection
-
-            text = text.upper().strip()
-
-            result[f"dt_{index}"] = f"{text}_{score:.4}"
-
-        return result or None
-
-    def get_ocr_output(self, crop_img_list: List[Image.Image], crop_error: int):
-        start_time_ocr = time.perf_counter()
-
-        # OCR license plate
-        license_text_ocr_result = {}
-        for index, img in enumerate(crop_img_list):
-            obj_index = f"r_{index}"
-            try:
-                """ # Experimental size scaling for more accurate ocr
-                width, height = img.size
-                new_size = (int(width * 1.5), int(height * 1.5))
-                img = img.resize(new_size) """
-                license_text_ocr_result[obj_index] = self.read_license_plate(
-                    img
-                )
-            except Exception as e:
-                logging.error(e, exc_info=True)
-                license_text_ocr_result[obj_index] = f"Error: {e}"
-
-        # Time out OCR
-        ocr_process_time = time.perf_counter() - start_time_ocr
-
-        return license_text_ocr_result, ocr_process_time
-
-    def detect_objects(
-        self, model_name, url_input, image_input, webcam_input, threshold
-    ):
+    def detect_objects(self, image_input, threshold):
         # Time process
         start_time_detection = time.perf_counter()
 
-        self.model = model_name
-
-        # Extract model and feature extractor
-        feature_extractor = AutoFeatureExtractor.from_pretrained(self.model)
-
-        if "yolos" in self.model:
-            model = YolosForObjectDetection.from_pretrained(self.model)
-        elif "detr" in self.model:
-            model = DetrForObjectDetection.from_pretrained(self.model)
-
-        if validators.url(url_input):
-            image = self.get_original_image(url_input)
-
-        elif image_input:
-            image = image_input
-
-        elif webcam_input:
-            image = webcam_input
-            # 'flipping' the vertical axis of the input may be needed
-            # depending on configuration of the webcam and emulator
-            # see Gradio (https://www.gradio.app/docs/image)
-            # specially regarding mirror_webcam attribute
-            # image = image.transpose(Image.FLIP_LEFT_RIGHT)
-
         # Make prediction
-        processed_outputs = self.make_prediction(
-            image, feature_extractor, model
-        )
+        processed_outputs = self.make_prediction(image_input)
 
         # Visualize prediction
         viz_img, crop_img, crop_error = self.visualize_prediction(
-            image, processed_outputs, threshold, model.config.id2label
+            image_input, processed_outputs, threshold
         )
         detection_process_time = time.perf_counter() - start_time_detection
 
+        # OCR license
         (
             license_text_ocr_result,
             ocr_process_time,
-        ) = self.get_ocr_output(crop_img, crop_error)
+        ) = get_ocr_output(self.reader, crop_img, crop_error)
 
         # package data and return
         time_stamp = datetime.datetime.now()

@@ -9,7 +9,7 @@ from . import base64_utils, file_system_utils, license_detector
 class DetectorInterface:
     def __init__(self):
         # load license_detector
-        detector_obj = license_detector.LicenseOCRDetector()
+        detector_obj = license_detector.LicenseDetector()
         self.detector = detector_obj
 
         # load fs utilities
@@ -19,21 +19,16 @@ class DetectorInterface:
     def detect_license_from_fs_location(self, fs_location, options=None):
         input_img = Image.open(fs_location)
         if input_img.mode != "RGB":
-            input_img = input_img.convert('RGB')        
+            input_img = input_img.convert("RGB")
         # Experimental size scaling for more accurate ocr
         width, height = input_img.size
         new_size = (int(width * 3), int(height * 3))
-        input_img = input_img.resize(new_size)        
+        input_img = input_img.resize(new_size)
         # load data
-        model_name = ""
-        url_input = None
-        image_input = None
-        webcam_input = Image.open(fs_location).convert('RGB')
-        threshold = 0.5
+        image_input = Image.open(fs_location).convert("RGB")
+        threshold = 0.7
 
-        detection = self.detector.detect_objects(
-            model_name, url_input, image_input, webcam_input, threshold
-        )
+        detection = self.detector.detect_objects(image_input, threshold)
 
         # save original file name
         # Normalize the path to use the appropriate path separator for the current OS
@@ -101,7 +96,8 @@ class DetectorInterface:
     def check_for_base64_request_options(serializer_data, request_data):
         if len(request_data) > 0:
             return DetectorInterface.encode_base64_image_to_send_by_json(
-                serializer_data, DetectorInterface.get_base64_query_params(request_data)
+                serializer_data,
+                DetectorInterface.get_base64_query_params(request_data),
             )
         else:
             return serializer_data
