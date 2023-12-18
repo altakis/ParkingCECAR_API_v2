@@ -1,7 +1,10 @@
 import io
-from PIL import Image
-import validators
+
+import cv2
 import requests
+import validators
+from numpy import asarray
+from PIL import Image
 
 
 def get_original_image(url_input):
@@ -19,3 +22,18 @@ def fig2img(fig):
     hsize = int((float(pil_img.size[1]) * float(wpercent)))
 
     return pil_img.resize((basewidth, hsize), Image.Resampling.LANCZOS)
+
+
+def adjust_dimensions(img: Image.Image):
+    # Get the current width and height
+    width, height = img.size
+
+    # Calculate the new width and height that are multiples of 32
+    new_width = (width // 32) * 32
+    new_height = (height // 32) * 32
+
+    return img.resize((new_width, new_height))
+
+
+def PIL2CV2(img: Image.Image):
+    return cv2.cvtColor(asarray(img), cv2.COLOR_RGB2BGR)

@@ -11,14 +11,18 @@ import torch
 import validators
 from numpy import asarray
 from PIL import Image
-from .image_utils import fig2img, get_original_image
-from .ocr_utils import get_ocr_output
 from ultralytics import YOLO
+
+from .image_utils import PIL2CV2, adjust_dimensions, fig2img, get_original_image
+from .ocr_utils import get_ocr_output
 
 
 class LicenseDetector:
     def __init__(self, gpu_available=False, ocr_verbose=False) -> None:
-        self._model = YOLO("./ml_models/yolov8n_license_detector_20e.onnx")
+        self._model = YOLO(
+            model="detector_utils/ml_models/yolov8n_license_detector_20e.onnx",
+            task="detect",
+        )
         self._reader = easyocr.Reader(
             ["en"], gpu=gpu_available, verbose=ocr_verbose
         )
@@ -36,44 +40,57 @@ class LicenseDetector:
         return self._reader
 
     def make_prediction(self, img):
-        return self.model(img, stream=True)
+        img = adjust_dimensions(img)
+
+        return self.model.predict(source=img, imgsz=416, save=True)
 
     def visualize_prediction(
-        self, img, output_dict, threshold=0.5, id2label=None
+        self, img: Image.Image, output_list, threshold=0.7
     ):
-        keep = output_dict["scores"] > threshold
-        boxes = output_dict["boxes"][keep].tolist()
-        scores = output_dict["scores"][keep].tolist()
-        labels = output_dict["labels"][keep].tolist()
-
-        # Crops located license img for later ocr processing
-        # crop_error values: 0 = None, 1 = cropping error, 2 = not found license
+        # convert PIL.Image to OpenCV format
+        img_cv = PIL2CV2(img)
+        # crop_error values:
+        # 0 = No error,
+        # 1 = cropping error,
+        # 2 = no license found in img
         crop_error = 0.0
-        if len(boxes) > 0:
-            crop_img = []
-            for img_box in boxes:
+        crop_img_list = []
+        for object_data in output_list[0].boxes.data:
+            x1, y1, x2, y2, score, class_id = object_data
+
+            if class_id == 0 and score > threshold:
                 try:
-                    crop_img.append(img.crop(img_box))
+                    crop_img_list.append(
+                        [
+                            img_cv[int(y1) : int(y2), int(x1) : int(x2), :],
+                            {
+                                x1: x1,
+                                y1: y1,
+                                x2: x2,
+                                y2: y2,
+                                score: score,
+                                class_id: class_id,
+                            },
+                        ]
+                    )
                 except Exception as e:
                     logging.error(e, exc_info=True)
                     try:
-                        crop_img.append(img)
+                        crop_img_list.append(img)
                         crop_error += 0.1
                     except Exception as e:
                         logging.error(e, exc_info=True)
                         continue
-        else:
+
+        if len(crop_img_list) == 0:
             crop_error = 2
-            crop_img = [img]
-
-        if id2label is not None:
-            labels = [id2label[x] for x in labels]
-
-        img_array = asarray(img)
-        for score, (xmin, ymin, xmax, ymax), label in zip(
-            scores, boxes, labels
-        ):
-            if label == "license-plates":
+            crop_img_list = [img]
+        else:
+            # class labels extracted from model configuration
+            id2label_dict = {0: "license-plate", 1: "vehicle"}
+            for crop_data in crop_img_list:
+                img_array = crop_data[0]
+                x1, y1, x2, y2, score, class_id = crop_data[1].values()
                 height, width, _ = img_array.shape
                 # linewidth and thickness
                 lw = max(
@@ -82,33 +99,33 @@ class LicenseDetector:
                 tf = max(lw - 1, 1)  # Font thickness.
                 cv2.rectangle(
                     img_array,
-                    (int(xmin), int(ymin)),
-                    (int(xmax), int(ymax)),
+                    (int(x1), int(y1)),
+                    (int(x2), int(y2)),
                     (0, 255, 0),
                     thickness=tf,
                 )
                 FONT_SCALE = 2e-3
                 cv2.putText(
                     img=img_array,
-                    text=f"{label}: {score:0.2f}",
-                    org=(int(xmin), int(ymin)),
+                    text=f"{id2label_dict[class_id]}: {score:0.2f}",
+                    org=(int(x1), int(y1)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=min(width, height) * FONT_SCALE,
                     color=(0, 255, 255),
                     thickness=tf,
                 )
 
-        license_located_img = Image.fromarray(img_array)
+        license_located_img = img_cv[int(y1) : int(y2), int(x1) : int(x2), :]
         if crop_error == 2:
             return license_located_img, license_located_img, crop_error
-        return license_located_img, crop_img, crop_error
+        return license_located_img, crop_img_list, crop_error
 
     def detect_objects(self, image_input, threshold):
         # Time process
         start_time_detection = time.perf_counter()
 
         # Make prediction
-        processed_outputs = self.make_prediction(image_input)
+        processed_outputs = self.make_prediction(image_input)[0]
 
         # Visualize prediction
         viz_img, crop_img, crop_error = self.visualize_prediction(

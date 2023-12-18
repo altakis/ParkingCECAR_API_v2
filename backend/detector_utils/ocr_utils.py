@@ -3,11 +3,12 @@ import time
 from typing import List
 
 import cv2
-from numpy import asarray
+from numpy import asarray, uint8
+from numpy.typing import NDArray
 from PIL import Image
 
 
-def read_license_plate(ocr_reader, license_plate_crop: Image.Image):
+def read_license_plate(ocr_reader, license_plate_crop: NDArray[uint8]):
     # format PIL.Image input into grayscale
     license_plate_crop_gray = cv2.cvtColor(
         asarray(license_plate_crop), cv2.COLOR_BGR2GRAY
