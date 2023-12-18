@@ -39,7 +39,7 @@ class DetectorInterface:
         # create img folders if they don't exist
         self.save_img_util.initialize_folders()
 
-        # save img results
+        """ # save img results
         (
             img_ori_name,
             img_crop_name_list,
@@ -47,14 +47,14 @@ class DetectorInterface:
             img_crop_loc_list,
         ) = self.save_img_util.save_img_results(
             detection.get("viz_img"), detection.get("crop_img")
-        )
+        ) """
 
         # Package according to data Detector model object
         current_record_name = detection.get("record_name")
         full_record_name = f"{current_record_name}{filename}"
         detection["record_name"] = full_record_name
-        detection["pred_loc"] = img_ori_loc
-        detection["crop_loc"] = " ".join(img_crop_loc_list)
+        """ detection["pred_loc"] = img_ori_loc
+        detection["crop_loc"] = " ".join(img_crop_loc_list) """
 
         return {
             "detection": detection,
