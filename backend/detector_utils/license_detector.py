@@ -1,19 +1,13 @@
 import datetime
-import io
 import logging
 import time
-from typing import List
 
 import cv2
 import easyocr
-import requests
-import torch
-import validators
-from numpy import asarray
 from PIL import Image
 from ultralytics import YOLO
 
-from .image_utils import PIL2CV2, adjust_dimensions, fig2img, get_original_image
+from .image_utils import PIL2CV2, adjust_dimensions
 from .ocr_utils import get_ocr_output
 
 

@@ -3,7 +3,8 @@ import io
 import cv2
 import requests
 import validators
-from numpy import asarray
+from numpy import asarray, uint8
+from numpy.typing import NDArray
 from PIL import Image
 
 
@@ -37,3 +38,7 @@ def adjust_dimensions(img: Image.Image):
 
 def PIL2CV2(img: Image.Image):
     return cv2.cvtColor(asarray(img), cv2.COLOR_RGB2BGR)
+
+
+def CV22PIL(imgOpenCV: NDArray[uint8]):
+    return Image.fromarray(cv2.cvtColor(imgOpenCV, cv2.COLOR_BGR2RGB))
