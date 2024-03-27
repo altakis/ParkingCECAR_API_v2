@@ -5,8 +5,6 @@ from uuid import UUID
 import pytest
 from api.models import Detection
 from api.tasks import background_detection
-from celery.exceptions import Retry
-
 
 # Happy path tests
 
