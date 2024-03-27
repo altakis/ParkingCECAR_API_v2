@@ -83,13 +83,11 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
 
             id_field = uuid.uuid4()
 
-            self.detector_funtion(id_field, data)
+            payload_data = self.detector_funtion(id_field, data)
 
             payload = {}
             payload["id_ref"] = id_field
-            payload[
-                "msg"
-            ] = "Check back with that uuid in 30 secs at the endpoint /detections/ref/<uuid:id_ref>. \n If the detection process failed for any reason then it will return a {detail: Not found.} dictionary as response."
+            payload["data"] = payload_data
 
             return Response(payload, status=status.HTTP_201_CREATED)
         return Response(
@@ -107,8 +105,12 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
 
         payload["detection"]["id_ref"] = id_field
         logging.debug(payload)
+        payload_data = payload.get("detection")
 
-        serializer = DetectionSerializer(data=payload.get("detection"))
+        serializer = DetectionSerializer(data=payload_data)
         if serializer.is_valid(raise_exception=True):
             logging.info(serializer.validated_data)
             serializer.save()
+            return payload_data
+
+        return None 
