@@ -5,6 +5,7 @@ description = "V2 of the license plate detector api, extended with celery-redis 
 authors = ["ReadingShades <42413498+ReadingShades@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
