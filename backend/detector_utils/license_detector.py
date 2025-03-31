@@ -1,237 +1,177 @@
-import datetime
-import io
 import logging
+import os
 import time
-from typing import List
+from datetime import datetime
 
 import cv2
 import easyocr
-import requests
-import torch
-import validators
-from numpy import asarray
 from PIL import Image
-from transformers import (
-    AutoFeatureExtractor,
-    DetrForObjectDetection,
-    YolosForObjectDetection,
-)
+from ultralytics import YOLO
 
-# colors for visualization
-from .constants import COLORS, MODELS, DEFAULT_MODEL
+from .constants import IMG_BASE_DIR
+from .image_utils import CV22PIL, PIL2CV2, adjust_dimensions
+from .ocr_utils import get_ocr_output
 
 
-class LicenseOCRDetector:
-    _models = MODELS
-    _default_model = DEFAULT_MODEL
-
-    def __init__(
-        self, model="", gpu_available=False, ocr_verbose=False
-    ) -> None:
-        self._model = (
-            LicenseOCRDetector._default_model if len(model) == 0 else model
+class LicenseDetector:
+    def __init__(self, gpu_available=False, ocr_verbose=False) -> None:
+        self._model = YOLO(
+            model="detector_utils/ml_models/yolov8n_license_detector_20e.onnx",
+            task="detect",
         )
         self._reader = easyocr.Reader(
             ["en"], gpu=gpu_available, verbose=ocr_verbose
         )
 
     @property
-    def model(self) -> str:
+    def model(self) -> YOLO:
         return self._model
 
     @model.setter
-    def model(self, model) -> None:
-        if len(model) > 0:
-            if model in LicenseOCRDetector._models:
-                self._model = model
-            else:
-                self._model = LicenseOCRDetector._default_model
+    def model(self, model_name) -> None:
         return self.model
 
-    def get_original_image(self, url_input):
-        if validators.url(url_input):
-            return Image.open(requests.get(url_input, stream=True).raw)
+    @property
+    def reader(self) -> easyocr.Reader:
+        return self._reader
 
-    def fig2img(self, fig):
-        buf = io.BytesIO()
-        fig.savefig(buf)
-        buf.seek(0)
-        pil_img = Image.open(buf)
-        basewidth = 750
-        wpercent = basewidth / float(pil_img.size[0])
-        hsize = int((float(pil_img.size[1]) * float(wpercent)))
-        return pil_img.resize((basewidth, hsize), Image.Resampling.LANCZOS)
+    def make_prediction(self, img: Image.Image):
+        img = adjust_dimensions(img)
+        now = datetime.now()
+        dt_string = now.strftime("%Y_%m_%d__%H_%M_%S")
+        dt_string_stringified = f"{dt_string}"
 
-    def make_prediction(self, img, feature_extractor, model):
-        inputs = feature_extractor(img, return_tensors="pt")
-        outputs = model(**inputs)
-        img_size = torch.tensor([tuple(reversed(img.size))])
-        processed_outputs = feature_extractor.post_process(outputs, img_size)
-        return processed_outputs[0]
+        return (
+            self.model.predict(
+                source=img,
+                imgsz=416,
+                project="detection_imgs",
+                name=dt_string_stringified,
+                save=True,
+                save_crop=True,
+            )[0],
+            dt_string_stringified,
+        )
 
     def visualize_prediction(
-        self, img, output_dict, threshold=0.5, id2label=None
+        self, img: Image.Image, output_list, threshold=0.7
     ):
-        keep = output_dict["scores"] > threshold
-        boxes = output_dict["boxes"][keep].tolist()
-        scores = output_dict["scores"][keep].tolist()
-        labels = output_dict["labels"][keep].tolist()
-
-        # Crops located license img for later ocr processing
-        # crop_error values: 0 = None, 1 = cropping error, 2 = not found license
+        # convert PIL.Image to OpenCV format
+        img_cv = PIL2CV2(img)
+        # crop_error values:
+        # 0 = No error,
+        # 1 = cropping error,
+        # 2 = no license found in img
         crop_error = 0.0
-        if len(boxes) > 0:
-            crop_img = []
-            for img_box in boxes:
+        crop_img_list = []
+        for object_data in output_list[0].boxes.data:
+            x1, y1, x2, y2, score, class_id = object_data
+
+            if class_id == 0 and score > threshold:
                 try:
-                    crop_img.append(img.crop(img_box))
+                    crop_img_list.append(
+                        [
+                            CV22PIL(
+                                img_cv[int(y1) : int(y2), int(x1) : int(x2), :]
+                            ),
+                            {
+                                x1: x1,
+                                y1: y1,
+                                x2: x2,
+                                y2: y2,
+                                score: score,
+                                class_id: class_id,
+                            },
+                        ]
+                    )
                 except Exception as e:
                     logging.error(e, exc_info=True)
                     try:
-                        crop_img.append(img)
+                        crop_img_list.append(img)
                         crop_error += 0.1
                     except Exception as e:
                         logging.error(e, exc_info=True)
                         continue
-        else:
+
+        if len(crop_img_list) == 0:
             crop_error = 2
-            crop_img = [img]
-
-        if id2label is not None:
-            labels = [id2label[x] for x in labels]
-
-        img_array = asarray(img)
-        for score, (xmin, ymin, xmax, ymax), label in zip(
-            scores, boxes, labels
-        ):
-            if label == "license-plates":
+            crop_img_list = [img]
+        else:
+            # class labels extracted from model configuration
+            id2label_dict = {0: "license-plate", 1: "vehicle"}
+            img_array = img_cv
+            for crop_data in crop_img_list:
+                x1, y1, x2, y2, score, class_id = crop_data[1].values()
                 height, width, _ = img_array.shape
                 # linewidth and thickness
-                lw = max(round(sum((height, width)) / 2 * 0.003), 2)  # Line width.
+                lw = max(
+                    round(sum((height, width)) / 2 * 0.003), 2
+                )  # Line width.
                 tf = max(lw - 1, 1)  # Font thickness.
                 cv2.rectangle(
                     img_array,
-                    (int(xmin), int(ymin)),
-                    (int(xmax), int(ymax)),
-                    (0, 255, 0),
+                    (int(x2), int(y2)),
+                    (int(x1), int(y1)),
+                    (0, 0, 255),
                     thickness=tf,
                 )
-                FONT_SCALE = 2e-3            
+                FONT_SCALE = 2e-3
                 cv2.putText(
                     img=img_array,
-                    text=f"{label}: {score:0.2f}",
-                    org=(int(xmin), int(ymin)),
+                    text=f"{id2label_dict[int(class_id)]}: {score:0.2f}",
+                    org=(int(x1), int(y1)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=min(width, height) * FONT_SCALE,
                     color=(0, 255, 255),
                     thickness=tf,
                 )
 
-        license_located_img = Image.fromarray(img_array)
+        license_located_img = img_array
         if crop_error == 2:
-            return license_located_img, license_located_img, crop_error
-        return license_located_img, crop_img, crop_error
+            return img, license_located_img, crop_error
+        return license_located_img, crop_img_list, crop_error
 
-    def read_license_plate(self, license_plate_crop: Image.Image):
-        # format PIL.Image input into grayscale
-        license_plate_crop_gray = cv2.cvtColor(
-            asarray(license_plate_crop), cv2.COLOR_BGR2GRAY
-        )
-        _, license_plate_crop_thresh = cv2.threshold(
-            license_plate_crop_gray, 64, 255, cv2.THRESH_BINARY_INV
-        )
-
-        detections = self._reader.readtext(license_plate_crop_thresh)
-
-        result = {}
-        for index, detection in enumerate(detections):
-            bbox, text, score = detection
-
-            text = text.upper().strip()
-
-            result[f"dt_{index}"] = f"{text}_{score:.4}"
-
-        return result or None
-
-    def get_ocr_output(self, crop_img_list: List[Image.Image], crop_error: int):
-        start_time_ocr = time.perf_counter()
-
-        # OCR license plate
-        license_text_ocr_result = {}
-        for index, img in enumerate(crop_img_list):
-            obj_index = f"r_{index}"
-            try:
-                """ # Experimental size scaling for more accurate ocr
-                width, height = img.size
-                new_size = (int(width * 1.5), int(height * 1.5))
-                img = img.resize(new_size) """
-                license_text_ocr_result[obj_index] = self.read_license_plate(
-                    img
-                )
-            except Exception as e:
-                logging.error(e, exc_info=True)
-                license_text_ocr_result[obj_index] = f"Error: {e}"
-
-        # Time out OCR
-        ocr_process_time = time.perf_counter() - start_time_ocr
-
-        return license_text_ocr_result, ocr_process_time
-
-    def detect_objects(
-        self, model_name, url_input, image_input, webcam_input, threshold
-    ):
+    def detect_objects(self, image_input, threshold):
         # Time process
         start_time_detection = time.perf_counter()
 
-        self.model = model_name
-
-        # Extract model and feature extractor
-        feature_extractor = AutoFeatureExtractor.from_pretrained(self.model)
-
-        if "yolos" in self.model:
-            model = YolosForObjectDetection.from_pretrained(self.model)
-        elif "detr" in self.model:
-            model = DetrForObjectDetection.from_pretrained(self.model)
-
-        if validators.url(url_input):
-            image = self.get_original_image(url_input)
-
-        elif image_input:
-            image = image_input
-
-        elif webcam_input:
-            image = webcam_input
-            # 'flipping' the vertical axis of the input may be needed
-            # depending on configuration of the webcam and emulator
-            # see Gradio (https://www.gradio.app/docs/image)
-            # specially regarding mirror_webcam attribute
-            # image = image.transpose(Image.FLIP_LEFT_RIGHT)
-
         # Make prediction
-        processed_outputs = self.make_prediction(
-            image, feature_extractor, model
-        )
+        processed_outputs, crop_location_ref = self.make_prediction(image_input)
 
-        # Visualize prediction
-        viz_img, crop_img, crop_error = self.visualize_prediction(
-            image, processed_outputs, threshold, model.config.id2label
-        )
+        """ # Visualize prediction
+        viz_img, crop_img_list, crop_error = self.visualize_prediction(
+            image_input, processed_outputs, threshold
+        ) """
         detection_process_time = time.perf_counter() - start_time_detection
 
+        crop_img_list = load_crop_images(crop_location_ref)
+        # OCR license
         (
             license_text_ocr_result,
             ocr_process_time,
-        ) = self.get_ocr_output(crop_img, crop_error)
+        ) = get_ocr_output(self.reader, crop_img_list)
 
         # package data and return
-        time_stamp = datetime.datetime.now()
+        time_stamp = datetime.now()
 
         return {
             "record_name": f"{time_stamp}_",
             "time_stamp": time_stamp,
-            "viz_img": viz_img,
-            "crop_img": crop_img,
             "ocr_text_result": str(license_text_ocr_result),
             "processing_time_pred": round(detection_process_time, 20),
             "processing_time_ocr": round(ocr_process_time, 20),
+            "pred_loc": os.path.join(
+                IMG_BASE_DIR, f"{crop_location_ref}/image0.jpg"
+            ),
+            "crop_loc": " ".join(crop_img_list),
         }
+
+
+def load_crop_images(crop_location_ref: str):
+    crop_folder = os.path.join(
+        IMG_BASE_DIR, f"{crop_location_ref}/crops/license-plate"
+    )
+    crop_list = []
+    for file in os.listdir(crop_folder):
+        crop_list.append(os.path.join(crop_folder, file))
+    return crop_list

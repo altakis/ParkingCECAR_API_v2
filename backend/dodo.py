@@ -17,21 +17,3 @@ def task_rundevpub():
         "actions": [CmdAction(f"{POETRY_ENV_RUN} {PYTHON_SCRIPT_CMD} manage runserver 0.0.0.0:8000")],
         'verbosity': 2,
     }
-
-def task_celery_run():
-    return {
-        "actions": [CmdAction(f"{POETRY_ENV_RUN} {PYTHON_SCRIPT_CMD} celery -A core worker -P gevent")],
-        'verbosity': 2,
-    }
-
-def task_celery_info():
-    return {
-        "actions": [CmdAction(f"{POETRY_ENV_RUN} {PYTHON_SCRIPT_CMD} celery -A core worker -l INFO -P gevent")],
-        'verbosity': 2,
-    }
-
-def task_celery_debug():
-    return {
-        "actions": [CmdAction(f"{POETRY_ENV_RUN} {PYTHON_SCRIPT_CMD} celery -A core worker -l DEBUG -P gevent")],
-        'verbosity': 2,
-    }

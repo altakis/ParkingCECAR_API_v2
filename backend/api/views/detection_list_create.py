@@ -3,8 +3,6 @@ import uuid
 
 from api.models import Detection
 from api.serializers import DetectionPOSTOptionsSerializer, DetectionSerializer
-from api.tasks import background_detection
-from core import celery_utils
 from detector_utils import file_system_utils, inference_interface
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins, status
@@ -31,7 +29,7 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
         """
         return self.list(self, request, *args, **kwargs)
 
-    @extend_schema(        
+    @extend_schema(
         responses=DetectionSerializer,
         request=DetectionPOSTOptionsSerializer,
     )
@@ -85,27 +83,11 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
 
             id_field = uuid.uuid4()
 
-            worker_status = celery_utils.get_worker_status()
-            logging.info(f"Testing worker status: {worker_status}")
-            worker_availability = worker_status.get("availability")
-            logging.info(f"Testing worker availability: {worker_availability}")
-
-            worker_up_flag = False
-            if worker_availability is not None:
-                if len(worker_availability) > 0:
-                    background_detection.delay(id_field, data)
-                    worker_up_flag = True
-            else:
-                logging.warning("Celery-redis worker down")
-
-            if not worker_up_flag:
-                self.detector_funtion(id_field, data)
+            payload_data = self.detector_funtion(id_field, data)
 
             payload = {}
             payload["id_ref"] = id_field
-            payload[
-                "msg"
-            ] = "Check back with that uuid in 30 secs at the endpoint /detections/ref/<uuid:id_ref>. \n If the detection process failed for any reason then it will return a {detail: Not found.} dictionary as response."
+            payload["data"] = payload_data
 
             return Response(payload, status=status.HTTP_201_CREATED)
         return Response(
@@ -123,8 +105,12 @@ class DetectionList(mixins.ListModelMixin, generics.GenericAPIView):
 
         payload["detection"]["id_ref"] = id_field
         logging.debug(payload)
+        payload_data = payload.get("detection")
 
-        serializer = DetectionSerializer(data=payload.get("detection"))
+        serializer = DetectionSerializer(data=payload_data)
         if serializer.is_valid(raise_exception=True):
             logging.info(serializer.validated_data)
             serializer.save()
+            return payload_data
+
+        return None 
